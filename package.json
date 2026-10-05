@@ -1,0 +1,31 @@
+{
+  "name": "linkedin-referral-ai-agent",
+  "version": "1.0.0",
+  "description": "End-to-End LinkedIn Referral Outreach AI Agent",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "dev:backend": "node server.js",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "node test_agent.js"
+  },
+  "keywords": [
+    "linkedin",
+    "ai-agent",
+    "referral",
+    "automation",
+    "playwright"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "playwright": "^1.63.0",
+    "ws": "^8.22.0"
+  }
+}

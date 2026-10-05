@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+data/chrome_profile/
+data/history.json
+scratch/
+test_data/
+*.png
