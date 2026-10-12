@@ -44,6 +44,7 @@ wss.on('connection', (ws) => {
     type: 'INIT_STATE',
     isRunning: coordinator.isRunning,
     history: coordinator.history.getAll(),
+    lastCampaign: coordinator.history.lastCampaign,
     stats: coordinator.history.getStats()
   }));
 
@@ -79,7 +80,11 @@ app.get('/api/history', (req, res) => {
   const filtered = company 
     ? history.filter(h => h.company.toLowerCase() === company.toLowerCase())
     : history;
-  res.json({ records: filtered, stats: coordinator.history.getStats(company) });
+  res.json({
+    records: filtered,
+    stats: coordinator.history.getStats(company),
+    lastCampaign: coordinator.history.lastCampaign
+  });
 });
 
 app.get('/api/history/csv', (req, res) => {

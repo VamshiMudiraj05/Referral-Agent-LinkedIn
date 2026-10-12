@@ -77,6 +77,51 @@ body {
   gap: 12px;
 }
 
+.campaign-progress {
+  margin: 0 0 14px;
+}
+
+.campaign-progress__label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.campaign-progress__label strong {
+  color: var(--success);
+  font-variant-numeric: tabular-nums;
+}
+
+.campaign-progress__track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background-color: #E6EBF0;
+}
+
+.campaign-progress__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0A66C2, #057642);
+  transition: width 550ms ease;
+}
+
+.campaign-progress__hint {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campaign-progress__fill {
+    transition: none;
+  }
+}
+
 @media (max-width: 1024px) {
   .kpi-grid {
     grid-template-columns: repeat(3, 1fr);

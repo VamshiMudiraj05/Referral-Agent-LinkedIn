@@ -102,7 +102,7 @@ flowchart TD
 ### Prerequisites
 
 - **Node.js** v18 or higher (tested on Node v20 & v24)
-- **Google Chrome** installed (standard path `/Applications/Google Chrome.app` on macOS)
+- **Google Chrome** installed (auto-detected on macOS `/Applications/Google Chrome.app` and Windows `C:\Program Files\Google\Chrome\Application\chrome.exe`. See [WINDOWS_SETUP.md](WINDOWS_SETUP.md) for Windows specifics).
 
 ### Installation
 

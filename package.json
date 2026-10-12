@@ -7,9 +7,10 @@
     "start": "node server.js",
     "dev": "node server.js",
     "dev:backend": "node server.js",
-    "dev:frontend": "cd frontend && npm run dev",
-    "build:frontend": "cd frontend && npm run build",
-    "test": "node test_agent.js"
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "test": "node test_agent.js",
+    "test:windows": "node test_windows_compatibility.js"
   },
   "keywords": [
     "linkedin",

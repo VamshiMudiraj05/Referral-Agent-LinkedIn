@@ -47,9 +47,11 @@ export default function App() {
     salesSent: 0,
     itSent: 0
   });
+  const [campaignProgress, setCampaignProgress] = useState({ sent: 0, target: 0 });
 
   const [candidates, setCandidates] = useState([]);
   const [history, setHistory] = useState([]);
+  const [lastCampaign, setLastCampaign] = useState(null);
   const [approvalRequest, setApprovalRequest] = useState(null);
   const [companyVerification, setCompanyVerification] = useState(null);
   const [finalReport, setFinalReport] = useState(null);
@@ -100,6 +102,7 @@ export default function App() {
       .then(data => {
         if (data.records) setHistory(data.records);
         if (data.stats) setStats(data.stats);
+        if (data.lastCampaign) setLastCampaign(data.lastCampaign);
       })
       .catch(() => {});
 
@@ -115,6 +118,7 @@ export default function App() {
         setIsRunning(msg.isRunning);
         if (msg.history) setHistory(msg.history);
         if (msg.stats) setStats(msg.stats);
+        if (msg.lastCampaign) setLastCampaign(msg.lastCampaign);
         break;
 
       case 'LOG':
@@ -123,6 +127,13 @@ export default function App() {
 
       case 'STATS_UPDATE':
         setStats(prev => ({ ...prev, ...msg.stats }));
+        break;
+
+      case 'CAMPAIGN_PROGRESS':
+        setCampaignProgress({
+          sent: Math.max(0, Number(msg.sent) || 0),
+          target: Math.max(0, Number(msg.target) || 0)
+        });
         break;
 
       case 'REQUIRE_LOGIN':
@@ -162,7 +173,14 @@ export default function App() {
       case 'CAMPAIGN_FINISHED':
         setIsRunning(false);
         setFinalReport(msg.report);
+        if (msg.report?.lastCampaign) {
+          setCampaignProgress({
+            sent: msg.report.lastCampaign.stats?.sent || 0,
+            target: msg.report.lastCampaign.targetTotal || 0
+          });
+        }
         if (msg.report?.records) setHistory(msg.report.records);
+        if (msg.report?.lastCampaign) setLastCampaign(msg.report.lastCampaign);
         setActiveTab('report');
         try {
           confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
@@ -182,6 +200,7 @@ export default function App() {
   const handleStartCampaign = async (config) => {
     setCurrentCompany(config.companyName);
     setCurrentMessage(config.referralMessage);
+    setCampaignProgress({ sent: 0, target: Math.max(0, Number(config.maxSession) || Number(config.maxPerCompany) || 0) });
     setIsRunning(true);
     setFinalReport(null);
     setCompanyVerification(null);
@@ -418,6 +437,31 @@ export default function App() {
             </div>
           </div>
 
+          {campaignProgress.target > 0 && (
+            <div className="campaign-progress">
+              <div className="campaign-progress__label">
+                <span>Confirmed requests</span>
+                <strong>{Math.min(campaignProgress.sent, campaignProgress.target)} / {campaignProgress.target}</strong>
+              </div>
+              <div
+                className="campaign-progress__track"
+                role="progressbar"
+                aria-label="Confirmed connection requests"
+                aria-valuemin={0}
+                aria-valuemax={campaignProgress.target}
+                aria-valuenow={Math.min(campaignProgress.sent, campaignProgress.target)}
+              >
+                <div
+                  className="campaign-progress__fill"
+                  style={{ width: `${Math.min(100, (campaignProgress.sent / campaignProgress.target) * 100)}%` }}
+                />
+              </div>
+              <span className="campaign-progress__hint">
+                Counts only requests confirmed by LinkedIn.
+              </span>
+            </div>
+          )}
+
           <div className="kpi-grid">
             <div style={{ padding: '8px 12px', backgroundColor: '#F8FAFC', borderRadius: '6px', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Requests sent</div>
@@ -460,6 +504,7 @@ export default function App() {
           <CampaignSetup
             onStartCampaign={handleStartCampaign}
             isRunning={isRunning}
+            recentCompanies={history.map(record => record.company).filter(Boolean)}
           />
         )}
 
@@ -508,6 +553,7 @@ export default function App() {
         {activeTab === 'history' && (
           <HistoryView
             history={history}
+            lastCampaign={lastCampaign}
           />
         )}
 
@@ -522,6 +568,7 @@ export default function App() {
         {/* Human Approval Floating Modal */}
         {approvalRequest && (
           <ApprovalModal
+            key={approvalRequest.candidate?.profileUrl || approvalRequest.candidate?.personName}
             data={approvalRequest}
             onDecision={handleApprovalDecision}
           />

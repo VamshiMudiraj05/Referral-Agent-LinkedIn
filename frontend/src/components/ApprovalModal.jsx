@@ -5,19 +5,15 @@ import {
   Square, 
   ExternalLink, 
   Edit2, 
-  AlertCircle, 
-  Briefcase, 
-  Building2, 
-  Check, 
-  X,
-  UserCheck
+  AlertCircle
 } from 'lucide-react';
 
 export default function ApprovalModal({ data, onDecision }) {
-  if (!data) return null;
-  const { candidate, companyName, message, score, priorityRank } = data;
-  const [currentMessage, setCurrentMessage] = useState(message || '');
+  const [currentMessage, setCurrentMessage] = useState(data?.message || '');
   const [isEditing, setIsEditing] = useState(false);
+
+  if (!data) return null;
+  const { candidate, companyName, score, priorityRank, canSend = true, verificationReason } = data;
 
   const charCount = currentMessage.length;
   const isOverLimit = charCount > 300;
@@ -158,8 +154,21 @@ export default function ApprovalModal({ data, onDecision }) {
             )}
           </div>
 
-          {/* Connection Note Section */}
-          <div style={{ marginBottom: '18px' }}>
+          {!canSend ? (
+            <div role="alert" style={{
+              marginBottom: '18px',
+              padding: '12px 14px',
+              border: '1px solid #F1C7C7',
+              borderRadius: '6px',
+              backgroundColor: '#FFF5F5',
+              color: '#8A1C1C',
+              fontSize: '0.85rem',
+              lineHeight: '1.5'
+            }}>
+              Profile verification failed. Sending is disabled. {verificationReason}
+            </div>
+          ) : (
+            <div style={{ marginBottom: '18px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
               <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#1D2226' }}>
                 Connection note preview
@@ -221,7 +230,8 @@ export default function ApprovalModal({ data, onDecision }) {
                 <AlertCircle size={13} /> Note exceeds LinkedIn's 300 character limit! Please shorten before sending.
               </div>
             )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Modal Actions */}
@@ -252,12 +262,12 @@ export default function ApprovalModal({ data, onDecision }) {
             </button>
 
             <button
-              onClick={() => onDecision({ action: 'approve', editedMessage: currentMessage })}
-              disabled={isOverLimit}
+              onClick={() => canSend && onDecision({ action: 'approve', editedMessage: currentMessage })}
+              disabled={!canSend || isOverLimit}
               className="btn btn-primary"
-              style={{ padding: '7px 18px', fontSize: '0.84rem' }}
+              style={{ padding: '7px 18px', fontSize: '0.84rem', opacity: !canSend ? 0.55 : 1 }}
             >
-              <Send size={14} /> Approve & Send
+              <Send size={14} /> {canSend ? 'Approve & Send' : 'Sending Disabled'}
             </button>
           </div>
         </div>

@@ -17,14 +17,37 @@ import {
   ChevronUp
 } from 'lucide-react';
 
-export default function CampaignSetup({ onStartCampaign, isRunning }) {
+const RECENT_COMPANIES_KEY = 'referpilot.recentCompanies';
+const REFERRAL_MESSAGE_KEY = 'referpilot.referralMessage';
+const DEFAULT_REFERRAL_MESSAGE = 'Hi, I came across Associate Software Engineer role at [Company] which matches my skill set.Would you be able to refer me for this position? You can check my work here [https://vamshionweb.vercel.app/] Thanks!';
+
+function loadRecentCompanies() {
+  try {
+    const savedCompanies = JSON.parse(localStorage.getItem(RECENT_COMPANIES_KEY) || '[]');
+    return Array.isArray(savedCompanies)
+      ? savedCompanies.filter(company => typeof company === 'string' && company.trim())
+      : [];
+  } catch (error) {
+    console.warn('Could not load recent companies:', error);
+    return [];
+  }
+}
+
+function loadReferralMessage() {
+  try {
+    return localStorage.getItem(REFERRAL_MESSAGE_KEY) ?? DEFAULT_REFERRAL_MESSAGE;
+  } catch (error) {
+    console.warn('Could not load saved connection note:', error);
+    return DEFAULT_REFERRAL_MESSAGE;
+  }
+}
+
+export default function CampaignSetup({ onStartCampaign, isRunning, recentCompanies = [] }) {
   const [companyName, setCompanyName] = useState('');
   const [multiCompanyMode, setMultiCompanyMode] = useState(false);
   const [companyList, setCompanyList] = useState('');
-  
-  const [referralMessage, setReferralMessage] = useState(
-    "Hi, I came across opportunities at [Company] and wanted to reach out. If you find my profile relevant, I'd really appreciate connecting and any guidance or referral for suitable openings. Thanks!"
-  );
+  const [savedRecentCompanies, setSavedRecentCompanies] = useState(loadRecentCompanies);
+  const [referralMessage, setReferralMessage] = useState(loadReferralMessage);
 
   const [strategy, setStrategy] = useState('mutuals_alumni_first'); // 'mutuals_alumni_first' | 'hr_first' | 'it_first'
   const [maxPerCompany, setMaxPerCompany] = useState(5);
@@ -34,9 +57,22 @@ export default function CampaignSetup({ onStartCampaign, isRunning }) {
 
   const charCount = referralMessage.length;
   const isOverLimit = charCount > 300;
+  const recentCompanyNames = Array.from(new Set([
+    ...savedRecentCompanies,
+    ...recentCompanies.filter(company => typeof company === 'string' && company.trim())
+  ])).slice(0, 6);
+
+  const updateReferralMessage = (message) => {
+    setReferralMessage(message);
+    try {
+      localStorage.setItem(REFERRAL_MESSAGE_KEY, message);
+    } catch (error) {
+      console.warn('Could not save connection note:', error);
+    }
+  };
 
   const insertTag = (tag) => {
-    setReferralMessage(prev => prev + ` ${tag}`);
+    updateReferralMessage(`${referralMessage} ${tag}`);
   };
 
   const incrementLimit = () => {
@@ -61,6 +97,17 @@ export default function CampaignSetup({ onStartCampaign, isRunning }) {
     if (companies.length === 0 || !companies[0]) {
       alert('Please enter a target company name.');
       return;
+    }
+
+    const updatedRecentCompanies = Array.from(new Set([
+      ...companies.slice().reverse(),
+      ...savedRecentCompanies
+    ])).slice(0, 10);
+    setSavedRecentCompanies(updatedRecentCompanies);
+    try {
+      localStorage.setItem(RECENT_COMPANIES_KEY, JSON.stringify(updatedRecentCompanies));
+    } catch (error) {
+      console.warn('Could not save recent companies:', error);
     }
 
     const rawLimit = parseInt(maxPerCompany, 10) || 5;
@@ -138,10 +185,10 @@ export default function CampaignSetup({ onStartCampaign, isRunning }) {
                 placeholder="e.g. Microsoft, Google, Amazon..."
                 required
               />
-              {/* Suggestion Chips */}
+              {/* Recent company chips */}
               <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Suggestions:</span>
-                {['Microsoft', 'Google', 'Amazon', 'Apple', 'Meta', 'NVIDIA'].map(comp => (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Recent:</span>
+                {recentCompanyNames.length > 0 ? recentCompanyNames.map(comp => (
                   <button
                     key={comp}
                     type="button"
@@ -160,7 +207,11 @@ export default function CampaignSetup({ onStartCampaign, isRunning }) {
                   >
                     {comp}
                   </button>
-                ))}
+                )) : (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Companies from your campaigns will appear here.
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -196,12 +247,15 @@ export default function CampaignSetup({ onStartCampaign, isRunning }) {
           <textarea
             className="textarea"
             value={referralMessage}
-            onChange={(e) => setReferralMessage(e.target.value)}
+            onChange={(e) => updateReferralMessage(e.target.value)}
             rows={4}
             placeholder="Hi, I came across opportunities at [Company]..."
             required
             style={{ borderColor: isOverLimit ? '#CC1016' : undefined }}
           />
+          <span style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '5px' }}>
+            Your edited note is saved automatically and will be used as the default for future campaigns.
+          </span>
 
           {isOverLimit && (
             <div style={{ color: '#CC1016', fontSize: '0.8rem', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -285,10 +339,10 @@ export default function CampaignSetup({ onStartCampaign, isRunning }) {
             backgroundColor: '#F8FAFC'
           }}>
             <label style={{ fontSize: '0.88rem', fontWeight: '600', color: '#1D2226', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Users size={16} color="#0A66C2" /> Number of people to contact
+              <Users size={16} color="#0A66C2" /> Successful connection requests
             </label>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px', marginBottom: '12px' }}>
-              Maximum connection requests for this session (max: 25).
+              Target successful sends. Skipped, pending, or unconfirmed profiles do not count (max: 25).
             </p>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

@@ -1,12 +1,52 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
+
+function getDefaultChromePath() {
+  if (process.env.CHROME_PATH && fs.existsSync(process.env.CHROME_PATH)) {
+    return process.env.CHROME_PATH;
+  }
+
+  if (process.platform === 'win32') {
+    const candidates = [
+      path.join(process.env.PROGRAMFILES || 'C:\\Program Files', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(process.env['PROGRAMFILES(X86)'] || 'C:\\Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'Application', 'chrome.exe')
+    ];
+    for (const candidate of candidates) {
+      if (candidate && fs.existsSync(candidate)) {
+        return candidate;
+      }
+    }
+    return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  }
+
+  if (process.platform === 'darwin') {
+    const macPath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    if (fs.existsSync(macPath)) return macPath;
+    const userMacPath = path.join(process.env.HOME || '', 'Applications', 'Google Chrome.app', 'Contents', 'MacOS', 'Google Chrome');
+    if (fs.existsSync(userMacPath)) return userMacPath;
+    return macPath;
+  }
+
+  // Linux and other POSIX
+  const linuxCandidates = [
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium'
+  ];
+  for (const candidate of linuxCandidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return '/usr/bin/google-chrome';
+}
 
 class BrowserController {
   constructor(options = {}) {
     this.userDataDir = options.userDataDir || path.join(__dirname, '..', 'data', 'chrome_profile');
-    this.executablePath = options.executablePath || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    this.executablePath = options.executablePath || getDefaultChromePath();
     this.headless = options.headless !== undefined ? options.headless : false; // Default to visible for easy login and safety
     this.context = null;
     this.page = null;
@@ -22,8 +62,17 @@ class BrowserController {
     try {
       // 1. Terminate any lingering processes attached to this profile dir
       try {
-        const escapedPath = this.userDataDir.replace(/"/g, '\\"');
-        execSync(`pkill -f "${escapedPath}" || true`, { stdio: 'ignore' });
+        if (process.platform === 'win32') {
+          const safePath = this.userDataDir.replace(/['`$]/g, '');
+          spawnSync('powershell.exe', [
+            '-NoProfile',
+            '-Command',
+            `Get-CimInstance Win32_Process -Filter "Name = 'chrome.exe'" | Where-Object { $_.CommandLine -like '*${safePath}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`
+          ], { stdio: 'ignore' });
+        } else {
+          const escapedPath = this.userDataDir.replace(/"/g, '\\"');
+          execSync(`pkill -f "${escapedPath}" || true`, { stdio: 'ignore' });
+        }
       } catch (e) {}
 
       // 2. Remove stale Chromium singleton lock files

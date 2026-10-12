@@ -1,3 +1,19 @@
+async function findVisibleLocator(page, selectors, timeout = 750) {
+  for (const selector of selectors) {
+    const matches = page.locator(selector);
+    const count = await matches.count().catch(() => 0);
+
+    for (let index = 0; index < count; index++) {
+      const match = matches.nth(index);
+      if (await match.isVisible({ timeout }).catch(() => false)) {
+        return match;
+      }
+    }
+  }
+
+  return null;
+}
+
 class OutreachAgent {
   constructor(browserController, safetyController, historyManager, messageAgent, logger = console.log) {
     this.browser = browserController;
@@ -11,12 +27,25 @@ class OutreachAgent {
   async sendConnectionRequest({
     candidate,
     companyName,
+    verification,
     referralTemplate,
     approvalMode = true,
     onRequireApproval = null
   }) {
     const page = this.browser.page;
     if (!page) throw new Error('Browser page not available');
+
+    const expectedProfileUrl = (candidate.profileUrl || '').split('?')[0].replace(/\/$/, '').toLowerCase();
+    const verifiedProfileUrl = (verification?.verifiedProfileUrl || '').split('?')[0].replace(/\/$/, '').toLowerCase();
+    if (
+      verification?.isValid !== true
+      || verifiedProfileUrl !== expectedProfileUrl
+      || (verification.verifiedCompany || '').trim().toLowerCase() !== companyName.trim().toLowerCase()
+    ) {
+      const reason = 'Strict profile identity and current-company verification is required before outreach';
+      this.logger(`Refusing to send to ${candidate.personName}: ${reason}.`, 'error');
+      return { success: false, status: 'Failed', reason };
+    }
 
     // 1. Generate note without candidate name (seniority-safe greeting: "Hi," or "Hello,")
     const msgObj = this.messageAgent.generateMessage(referralTemplate, candidate, companyName);
@@ -108,55 +137,66 @@ class OutreachAgent {
       let clickedConnect = false;
 
       // =========================================================================
-      // SCENARIO 2: Check for DIRECT "Connect" button/link right below profile header
+      // SCENARIO 1: Use the profile's three-dot actions menu when available
       // =========================================================================
-      this.logger(`Checking for direct Connect button in header for ${candidate.personName}...`);
+      this.logger(`Checking the three-dot profile actions menu for ${candidate.personName}...`);
+      const moreButtonSelectors = [
+        'main button[aria-label="More"]',
+        'main button[aria-label*="More actions" i]',
+        'main button[aria-label*="More options" i]',
+        'main button[aria-label*="More" i]',
+        'main button[aria-label*="Actions" i]',
+        'main button[title*="More" i]',
+        'main button[data-control-name*="overflow" i]',
+        'main button:has([data-test-icon*="overflow" i])'
+      ];
+      const moreBtn = await findVisibleLocator(page, moreButtonSelectors);
 
-      // In LinkedIn, the direct Connect button in the top action row is an <a> or <button>
-      // e.g. <a href*="/preload/custom-invite/"> or <a aria-label="Invite ... to connect">
-      const directConnect = page.locator('main a[href*="/preload/custom-invite/"], main :is(a, button)[aria-label*="to connect" i]').first();
-      const directVisible = await directConnect.isVisible({ timeout: 1500 }).catch(() => false);
+      if (moreBtn) {
+        await moreBtn.click({ timeout: 4000 });
+        this.logger('Clicked the three-dot button; locating the exact Connect menu item...');
+        await page.waitForTimeout(800);
 
-      if (directVisible) {
-        this.logger(`✓ Found direct Connect button in header. Clicking directly...`);
-        // Use dispatchEvent + click({force:true}) to bypass SVG pointer-events interceptors without scrolling
-        await directConnect.dispatchEvent('click');
-        await directConnect.click({ force: true }).catch(() => {});
-        clickedConnect = true;
+        const menuConnectSelectors = [
+          'div[role="menu"] [aria-label="Connect" i]',
+          'div[role="menu"] a[role="menuitem"]:has-text("Connect")',
+          'div[role="menu"] :is(a, button, [role="menuitem"]):has-text("Connect")',
+          '.artdeco-dropdown__content :is(a, button, [role="menuitem"]):has-text("Connect")'
+        ];
+        const menuConnect = await findVisibleLocator(page, menuConnectSelectors);
+
+        if (menuConnect) {
+          await menuConnect.click({ timeout: 4000 });
+          clickedConnect = true;
+          this.logger('✓ Opened the invitation flow using Connect from the three-dot menu.');
+        } else {
+          this.logger(`Connect was not available in the opened three-dot menu for ${candidate.personName}.`, 'warning');
+        }
+      } else {
+        this.logger(`Three-dot actions button was not visible for ${candidate.personName}.`, 'info');
       }
 
       // =========================================================================
-      // SCENARIO 1: Three dots ("...") button -> Connect inside menu
+      // SCENARIO 2: Fall back to an explicitly identified direct Connect control
       // =========================================================================
       if (!clickedConnect) {
-        this.logger(`Direct Connect not in top row. Clicking three dots ("...") button for ${candidate.personName}...`);
+        this.logger(`Checking for a direct Connect control for ${candidate.personName}...`);
+        const directConnectSelectors = [
+          'main a[href*="/preload/custom-invite/"]',
+          'main button[aria-label="Connect" i]',
+          'main button[aria-label^="Invite" i][aria-label*="connect" i]'
+        ];
+        const directConnect = await findVisibleLocator(page, directConnectSelectors);
 
-        const moreBtn = page.locator('main button[aria-label="More"], main button[aria-label="More actions"]').first();
-        const moreVisible = await moreBtn.isVisible({ timeout: 2500 }).catch(() => false);
-
-        if (moreVisible) {
-          await moreBtn.click();
-          this.logger('Clicked three dots button. Waiting for menu...');
-          await page.waitForTimeout(800);
-
-          // Find Connect in the opened menu (LinkedIn uses role="menu")
-          const menuConnect = page.locator('div[role="menu"] [aria-label*="to connect" i], div[role="menu"] a[role="menuitem"]:has-text("Connect"), div[role="menu"] :is(a, div, span, button):has-text("Connect")').first();
-          const menuConnectVisible = await menuConnect.isVisible({ timeout: 2500 }).catch(() => false);
-
-          if (menuConnectVisible) {
-            await menuConnect.click();
-            clickedConnect = true;
-            this.logger('✓ Clicked "Connect" inside three dots menu.');
-          } else {
-            this.logger(`Connect option was not found in three dots menu for ${candidate.personName}.`, 'warning');
-          }
-        } else {
-          this.logger(`Three dots button not found on ${candidate.personName}'s profile.`, 'warning');
+        if (directConnect) {
+          await directConnect.click({ timeout: 4000 });
+          clickedConnect = true;
+          this.logger('✓ Opened the invitation flow using the direct Connect control.');
         }
       }
 
       if (!clickedConnect) {
-        this.logger(`Connect option not accessible for ${candidate.personName} (may already be connected, pending, or restricted).`, 'warning');
+        this.logger(`Neither the three-dot menu nor a direct Connect control provided an invitation action for ${candidate.personName}. No request was sent.`, 'warning');
         this.history.record({
           company: companyName,
           personName: candidate.personName,
@@ -165,11 +205,11 @@ class OutreachAgent {
           department: candidate.department,
           priorityRank: candidate.priorityRank,
           score: candidate.score,
-          status: 'Note Unavailable',
+          status: 'Failed',
           message: msgObj.message,
-          result: 'Connect option not accessible'
+          result: 'No Connect action found in the three-dot menu or direct profile controls'
         });
-        return { success: false, status: 'Note Unavailable', reason: 'Connect option not accessible' };
+        return { success: false, status: 'Failed', reason: 'No Connect action found in the three-dot menu or direct profile controls' };
       }
 
       // =========================================================================
@@ -202,14 +242,14 @@ class OutreachAgent {
         return { success: false, status: 'Skipped', reason: 'Recipient requires email verification' };
       }
 
-      // Look for "Add a note" button in the modal
-      const addNoteBtn = page.locator('div[role="dialog"] button:has-text("Add a note"), button:has-text("Add a note")').first();
+      // Look for "Add a note" button in the invitation flow
+      const addNoteBtn = page.getByRole('button', { name: /add a note/i }).first();
       const addNoteVisible = await addNoteBtn.isVisible({ timeout: 3500 }).catch(() => false);
 
       if (addNoteVisible) {
         this.logger('Found "Add a note" button. Clicking to open note textarea...');
         await addNoteBtn.click();
-        await page.waitForTimeout(800);
+        await page.waitForTimeout(400);
       } else {
         this.logger('Note textarea might already be visible or in direct composition view.');
       }
@@ -217,11 +257,25 @@ class OutreachAgent {
       // =========================================================================
       // STEP 4: Fill the note textarea
       // =========================================================================
-      const textareaLocator = page.locator('div[role="dialog"] textarea, textarea#custom-message, textarea[name="message"], textarea').first();
-      const textareaVisible = await textareaLocator.isVisible({ timeout: 5000 }).catch(() => false);
+      const noteFieldSelectors = [
+        '[role="dialog"] textarea',
+        '[role="dialog"] [contenteditable="true"][role="textbox"]',
+        '[role="dialog"] [contenteditable="true"]',
+        'textarea[aria-label*="note" i]',
+        'textarea[placeholder*="note" i]',
+        'textarea[name*="message" i]',
+        'textarea',
+        '[contenteditable="true"][role="textbox"]',
+        '[contenteditable="true"]'
+      ];
+      let noteField = null;
+      for (let attempt = 0; attempt < 6 && !noteField; attempt++) {
+        noteField = await findVisibleLocator(page, noteFieldSelectors, 500);
+        if (!noteField && attempt < 5) await page.waitForTimeout(500);
+      }
 
-      if (!textareaVisible) {
-        this.logger(`"Add a note" textarea was not accessible for ${candidate.personName}. Skipping sending without note.`, 'warning');
+      if (!noteField) {
+        this.logger(`LinkedIn's invitation note field was not accessible for ${candidate.personName}. No request was sent.`, 'warning');
         const dismissBtn = page.locator('div[role="dialog"] button[aria-label="Dismiss"], button:has-text("Cancel")').first();
         if (await dismissBtn.isVisible().catch(() => false)) {
           await dismissBtn.click().catch(() => {});
@@ -244,34 +298,84 @@ class OutreachAgent {
       }
 
       this.logger(`Typing referral message into note textarea (${msgObj.charCount}/300 chars)...`);
-      await textareaLocator.click();
+      await noteField.click();
       await page.waitForTimeout(200);
-      await textareaLocator.fill(msgObj.message);
+      await noteField.fill(msgObj.message);
       await page.waitForTimeout(800);
 
       // =========================================================================
       // STEP 5: Click "Send" button (ensure NOT "Send without a note")
       // =========================================================================
+      const filledNote = await noteField.evaluate(element =>
+        (element.value ?? element.innerText ?? element.textContent ?? '').trim()
+      );
+      if (filledNote !== msgObj.message || filledNote.length === 0 || filledNote.length > 300) {
+        throw new Error('Invitation note did not match the prepared message or exceeded LinkedIn’s 300 character limit');
+      }
+
       const sendLocators = [
-        page.locator('div[role="dialog"] button:has-text("Send"):not(:has-text("without a note"))').first(),
-        page.locator('div[role="dialog"] button:has-text("Send invitation")').first(),
-        page.locator('button:has-text("Send"):not(:has-text("without a note"))').first(),
-        page.locator('button:has-text("Send invitation")').first()
+        page.getByRole('button', { name: /^send$/i }),
+        page.getByRole('button', { name: /^send invitation$/i })
       ];
 
       let sent = false;
+      let sendAttemptedAt = '';
       for (const sLoc of sendLocators) {
-        if (await sLoc.isVisible({ timeout: 2000 }).catch(() => false)) {
+        if (await sLoc.count() > 0
+          && await sLoc.isVisible({ timeout: 2000 }).catch(() => false)
+          && await sLoc.isEnabled().catch(() => false)) {
+          sendAttemptedAt = new Date().toISOString();
           await sLoc.click({ timeout: 4000 });
           sent = true;
-          this.logger(`✓ Connection request with custom note successfully sent to ${candidate.personName}!`, 'success');
           break;
         }
       }
 
       if (sent) {
-        await page.waitForTimeout(2000);
+        const invitationSentToast = page.getByText(/invitation sent/i).first();
+        const pendingStatus = page.locator([
+          'main button:has-text("Pending")',
+          'main [role="button"]:has-text("Pending")',
+          'main [aria-label*="pending" i]',
+          'main button:has-text("Invitation sent")',
+          'main [role="button"]:has-text("Invitation sent")',
+          'main button:has-text("Requested")',
+          'main [role="button"]:has-text("Requested")'
+        ].join(', ')).first();
+        const waitForConfirmation = async locator => {
+          try {
+            await locator.waitFor({ state: 'visible', timeout: 5000 });
+            return true;
+          } catch {
+            return locator.isVisible().catch(() => false);
+          }
+        };
+        const confirmedByToast = await waitForConfirmation(invitationSentToast);
+        const confirmedByPending = confirmedByToast
+          ? false
+          : await waitForConfirmation(pendingStatus);
+
+        if (!confirmedByToast && !confirmedByPending) {
+          this.logger(`LinkedIn did not confirm the invitation to ${candidate.personName}; recording it as unconfirmed and not counting it toward the target.`, 'warning');
+          this.history.record({
+            company: companyName,
+            personName: candidate.personName,
+            profileUrl: candidate.profileUrl,
+            jobTitle: candidate.jobTitle,
+            department: candidate.department,
+            priorityRank: candidate.priorityRank,
+            score: candidate.score,
+            status: 'Unconfirmed',
+            attemptedAt: sendAttemptedAt,
+            message: msgObj.message,
+            result: 'Send was clicked, but LinkedIn confirmation was not detected'
+          });
+          return { success: false, status: 'Unconfirmed', reason: 'LinkedIn confirmation was not detected' };
+        }
+
+        this.logger(`✓ LinkedIn confirmed the connection request with custom note for ${candidate.personName}.`, 'success');
         this.safety.recordRequestSent();
+        const sentAt = sendAttemptedAt || new Date().toISOString();
 
         this.history.record({
           company: companyName,
@@ -282,8 +386,11 @@ class OutreachAgent {
           priorityRank: candidate.priorityRank,
           score: candidate.score,
           status: 'Sent',
+          sentAt,
           message: msgObj.message,
-          result: 'Successfully sent with custom note'
+          result: confirmedByToast
+            ? 'LinkedIn confirmed invitation with custom note'
+            : 'LinkedIn profile shows invitation pending with custom note'
         });
 
         // Natural delay between profile requests

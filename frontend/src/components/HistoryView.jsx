@@ -12,7 +12,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 
-export default function HistoryView({ history = [] }) {
+export default function HistoryView({ history = [], lastCampaign = null }) {
   const [search, setSearch] = useState('');
   const [filterCompany, setFilterCompany] = useState('ALL');
 
@@ -44,6 +44,9 @@ export default function HistoryView({ history = [] }) {
     if (s === 'skipped') {
       return <span className="badge badge-neutral">Skipped</span>;
     }
+    if (s === 'unconfirmed') {
+      return <span className="badge badge-error">Unconfirmed</span>;
+    }
     if (s === 'failed' || s.includes('block') || s.includes('error')) {
       return <span className="badge badge-error">Failed</span>;
     }
@@ -61,8 +64,63 @@ export default function HistoryView({ history = [] }) {
     }
   };
 
+  const formatDateTime = (isoOrTime) => {
+    if (!isoOrTime) return '—';
+    const date = new Date(isoOrTime);
+    if (Number.isNaN(date.getTime())) return isoOrTime;
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  const formatCompanies = companies => Array.isArray(companies) ? companies.join(', ') : '—';
+
   return (
     <div className="card" style={{ padding: '24px', backgroundColor: '#FFFFFF' }}>
+      {lastCampaign && (
+        <section
+          aria-label="Last campaign details"
+          style={{
+            padding: '16px',
+            marginBottom: '22px',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            backgroundColor: '#F8FAFC'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#1D2226' }}>Last campaign</h3>
+            <span className={`badge ${lastCampaign.status === 'completed' ? 'badge-success' : lastCampaign.status === 'review_required' ? 'badge-error' : 'badge-neutral'}`}>
+              {(lastCampaign.status || 'finished').replace(/_/g, ' ').replace(/^\w/, value => value.toUpperCase())}
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(165px, 1fr))', gap: '12px', marginTop: '14px' }}>
+            <div><strong>Companies:</strong> {formatCompanies(lastCampaign.companies)}</div>
+            <div><strong>Successful target:</strong> {lastCampaign.targetTotal ?? '—'} total / {lastCampaign.targetPerCompany ?? '—'} per company</div>
+            <div><strong>Mode:</strong> {lastCampaign.approvalMode || '—'}</div>
+            <div><strong>Started:</strong> {formatDateTime(lastCampaign.startedAt)}</div>
+            <div><strong>Finished:</strong> {formatDateTime(lastCampaign.finishedAt)}</div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginTop: '14px', color: 'var(--text-secondary)', fontSize: '0.84rem' }}>
+            <span>Sent: <strong>{lastCampaign.stats?.sent ?? 0}</strong></span>
+            <span>Skipped: <strong>{lastCampaign.stats?.skipped ?? 0}</strong></span>
+            <span>Pending: <strong>{lastCampaign.stats?.pending ?? 0}</strong></span>
+            <span>Unconfirmed—check LinkedIn: <strong>{lastCampaign.stats?.unconfirmed ?? 0}</strong></span>
+            <span>Failed: <strong>{lastCampaign.stats?.failed ?? 0}</strong></span>
+          </div>
+          {lastCampaign.stats?.unconfirmed > 0 && (
+            <p role="alert" style={{ color: '#8A1C1C', fontSize: '0.82rem', marginTop: '12px' }}>
+              LinkedIn did not confirm these send attempts. Check the profiles directly before retrying; they may already have received invitations.
+            </p>
+          )}
+        </section>
+      )}
+
       {/* Header */}
       <div style={{
         display: 'flex',
@@ -138,7 +196,7 @@ export default function HistoryView({ history = [] }) {
                 <th>Person</th>
                 <th>Role</th>
                 <th>Department</th>
-                <th>Date</th>
+                <th>Date / Sent time</th>
                 <th>Status</th>
                 <th>Message Note</th>
                 <th style={{ textAlign: 'right' }}>Profile</th>
@@ -162,7 +220,9 @@ export default function HistoryView({ history = [] }) {
                     </span>
                   </td>
                   <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                    {formatDate(item.timestamp || item.date)}
+                    {item.status === 'Sent' || item.status === 'Unconfirmed'
+                      ? formatDateTime(item.sentAt || item.attemptedAt || item.date)
+                      : formatDate(item.timestamp || item.date)}
                   </td>
                   <td>
                     {getStatusBadge(item.status)}

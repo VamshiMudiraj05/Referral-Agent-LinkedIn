@@ -114,9 +114,17 @@ class CandidateRankingAgent {
 
   scoreCandidate(candidate) {
     const title = candidate.jobTitle || candidate.headline || '';
+    const combinedText = `${candidate.personName} ${candidate.headline} ${candidate.jobTitle} ${candidate.subline || ''} ${candidate.cardText || ''}`.toLowerCase();
+    const isAlumni = candidate.isAlumni ||
+      combinedText.includes('school') ||
+      combinedText.includes('college') ||
+      combinedText.includes('alumni') ||
+      combinedText.includes('university') ||
+      combinedText.includes('studied at') ||
+      combinedText.includes('hired here');
     const exclusionCheck = this.isExcluded(title);
 
-    if (exclusionCheck.excluded) {
+    if (exclusionCheck.excluded && !isAlumni) {
       return {
         ...candidate,
         department: 'Excluded',
@@ -140,20 +148,10 @@ class CandidateRankingAgent {
     const seniorityScore = seniority.score;
 
     // Detect Mutual Connections & College Alumni from candidate headline, card text, or properties
-    const combinedText = `${candidate.personName} ${candidate.headline} ${candidate.jobTitle} ${candidate.subline || ''} ${candidate.cardText || ''}`.toLowerCase();
-    
     const isMutual = candidate.isMutual || 
                      combinedText.includes('mutual connection') || 
                      combinedText.includes('mutual') ||
                      (candidate.degree === '2nd');
-
-    const isAlumni = candidate.isAlumni || 
-                     combinedText.includes('school') || 
-                     combinedText.includes('college') || 
-                     combinedText.includes('alumni') || 
-                     combinedText.includes('university') ||
-                     combinedText.includes('studied at') ||
-                     combinedText.includes('hired here');
 
     // Massive priority boosts for Mutual Connections and Same College Alumni
     let mutualScore = isMutual ? 40 : 0;
@@ -184,7 +182,8 @@ class CandidateRankingAgent {
     const scored = candidates.map(c => this.scoreCandidate(c));
 
     // 2. Filter out non-HR and non-IT candidates
-    const valid = scored.filter(c => !c.isExcluded && (c.department === 'HR / Talent' || c.department === 'IT / Engineering'));
+    const valid = scored.filter(c => !c.isExcluded
+      && (c.department === 'HR / Talent' || c.department === 'IT / Engineering' || c.isAlumni));
 
     // 3. Deduplicate by profileUrl / name
     const seen = new Set();
