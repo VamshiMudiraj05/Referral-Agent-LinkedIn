@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Building2, 
-  Send, 
   Users, 
   Layers, 
   Terminal, 
@@ -9,12 +8,12 @@ import {
   FileText, 
   Play, 
   Square, 
-  CheckCircle2, 
   Clock, 
   AlertTriangle,
-  UserCheck,
   Compass,
-  ArrowRight
+  CheckCircle,
+  XCircle,
+  Briefcase
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -276,71 +275,80 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Top Professional Navigation Bar */}
-      <nav style={{
-        backgroundColor: '#FFFFFF',
-        borderBottom: '1px solid var(--border)',
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-app)' }}>
+      {/* Top Zentra-Inspired Navigation Bar */}
+      <header style={{
+        backgroundColor: 'var(--surface-main)',
+        borderBottom: '1px solid var(--border-divider)',
         position: 'sticky',
         top: 0,
-        zIndex: 50,
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)'
+        zIndex: 50
       }}>
         <div style={{
-          maxWidth: '1200px',
+          maxWidth: '1260px',
           margin: '0 auto',
-          padding: '0 20px',
-          height: '60px',
+          padding: '0 24px',
+          height: '64px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '16px'
         }}>
           {/* Brand Identity */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '8px',
-              backgroundColor: '#0A66C2',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              backgroundColor: 'var(--text-primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#FFFFFF'
             }}>
-              <Compass size={20} strokeWidth={2.2} />
+              <Compass size={19} strokeWidth={2.4} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.15rem', fontWeight: '700', letterSpacing: '-0.02em', color: '#1D2226' }}>
+                <span style={{ fontSize: '18px', fontWeight: '600', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
                   ReferPilot
                 </span>
                 <span style={{
-                  fontSize: '0.68rem',
+                  fontSize: '11px',
                   fontWeight: '600',
-                  padding: '1px 6px',
-                  borderRadius: '4px',
-                  backgroundColor: '#EBF4FD',
-                  color: '#0A66C2',
-                  border: '1px solid #CBE2FB'
+                  padding: '2px 7px',
+                  borderRadius: 'var(--radius-pill)',
+                  backgroundColor: 'var(--action-blue-subtle)',
+                  color: 'var(--action-blue)',
+                  border: '1px solid var(--action-blue-border)',
+                  letterSpacing: '0.04em'
                 }}>
                   AI
                 </span>
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#7A8A99', lineHeight: 1 }}>
-                AI-powered referral outreach
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.1, marginTop: '2px' }}>
+                Automated Referral Outreach
               </div>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', height: '100%', overflowX: 'auto' }}>
+          {/* Navigation Segmented Controls */}
+          <nav style={{
+            display: 'flex',
+            alignItems: 'center',
+            backgroundColor: 'var(--surface-secondary)',
+            padding: '3px',
+            borderRadius: '10px',
+            border: '1px solid var(--border-divider)',
+            gap: '2px',
+            overflowX: 'auto'
+          }}>
             {[
-              { id: 'setup', label: 'Campaigns', icon: <Layers size={16} /> },
-              { id: 'live', label: 'Live Activity', icon: <Terminal size={16} />, hasDot: isRunning },
-              { id: 'candidates', label: `Candidates (${candidates.length})`, icon: <Users size={16} /> },
-              { id: 'history', label: `History (${history.length})`, icon: <HistoryIcon size={16} /> },
-              { id: 'report', label: 'Reports', icon: <FileText size={16} /> }
+              { id: 'setup', label: 'Campaigns', icon: <Layers size={15} /> },
+              { id: 'live', label: 'Live Activity', icon: <Terminal size={15} />, hasDot: isRunning },
+              { id: 'candidates', label: `Candidates (${candidates.length})`, icon: <Users size={15} /> },
+              { id: 'history', label: `History (${history.length})`, icon: <HistoryIcon size={15} /> },
+              { id: 'report', label: 'Reports', icon: <FileText size={15} /> }
             ].map(tab => {
               const isActive = activeTab === tab.id;
               return (
@@ -351,22 +359,24 @@ export default function App() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    padding: '0 14px',
-                    height: '100%',
-                    background: 'transparent',
+                    padding: '6px 14px',
+                    background: isActive ? 'var(--surface-main)' : 'transparent',
                     border: 'none',
-                    borderBottom: isActive ? '2px solid #0A66C2' : '2px solid transparent',
-                    color: isActive ? '#0A66C2' : '#56687A',
+                    borderRadius: '8px',
+                    color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                     fontWeight: isActive ? '600' : '500',
-                    fontSize: '0.86rem',
+                    fontSize: '13.5px',
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
-                    transition: 'color 0.15s ease'
+                    boxShadow: isActive ? '0 1px 3px rgba(23, 25, 29, 0.06)' : 'none',
+                    transition: 'all 0.15s ease'
                   }}
-                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = '#1D2226'; }}
-                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = '#56687A'; }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = 'var(--text-primary)'; }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = 'var(--text-secondary)'; }}
                 >
-                  {tab.icon}
+                  <span style={{ color: isActive ? 'var(--action-blue)' : 'inherit', display: 'flex' }}>
+                    {tab.icon}
+                  </span>
                   <span>{tab.label}</span>
                   {tab.hasDot && (
                     <span className="status-dot active" style={{ width: '6px', height: '6px' }} />
@@ -374,7 +384,7 @@ export default function App() {
                 </button>
               );
             })}
-          </div>
+          </nav>
 
           {/* Top Actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -382,22 +392,24 @@ export default function App() {
               <button
                 onClick={handleStopCampaign}
                 className="btn btn-danger"
-                style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+                style={{ padding: '7px 15px', fontSize: '13.5px' }}
               >
-                <Square size={13} fill="#CC1016" /> Stop Campaign
+                <Square size={13} fill="currentColor" />
+                <span>Stop Campaign</span>
               </button>
             ) : (
               <button
                 onClick={() => setActiveTab('setup')}
                 className="btn btn-primary"
-                style={{ padding: '7px 16px', fontSize: '0.84rem' }}
+                style={{ padding: '7px 16px', fontSize: '13.5px' }}
               >
-                <Play size={13} fill="#FFFFFF" /> New Campaign
+                <Play size={13} fill="#FFFFFF" />
+                <span>New Campaign</span>
               </button>
             )}
           </div>
         </div>
-      </nav>
+      </header>
 
       {/* Main Centered Content */}
       <main className="container" style={{ flex: 1 }}>
@@ -408,30 +420,38 @@ export default function App() {
           onResume={handleResumeSafety}
         />
 
-        {/* Compact Campaign Overview Bar */}
-        <section className="card" style={{ padding: '14px 20px', marginBottom: '20px' }}>
+        {/* Campaign Overview Section (Zentra Style) */}
+        <section className="card" style={{ padding: '18px 22px', marginBottom: '22px' }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: '10px',
+            marginBottom: '14px',
             flexWrap: 'wrap',
-            gap: '8px'
+            gap: '10px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#1D2226' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>
                 Campaign Overview
               </span>
               {currentCompany && (
-                <span className="badge badge-neutral" style={{ fontSize: '0.75rem' }}>
-                  Target: <strong>{currentCompany}</strong>
+                <span className="badge badge-neutral" style={{ fontSize: '12px' }}>
+                  Target: <strong style={{ color: 'var(--text-primary)', marginLeft: '3px' }}>{currentCompany}</strong>
                 </span>
               )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '7px',
+              padding: '4px 10px',
+              backgroundColor: 'var(--surface-secondary)',
+              borderRadius: 'var(--radius-pill)',
+              border: '1px solid var(--border-divider)'
+            }}>
               <span className={`status-dot ${isPaused ? 'alert' : isRunning ? 'active' : 'idle'}`} />
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+              <span style={{ fontSize: '12.5px', fontWeight: '500', color: 'var(--text-secondary)' }}>
                 {isPaused ? 'Awaiting Manual Verification' : isRunning ? 'Agent Active' : 'Ready'}
               </span>
             </div>
@@ -440,7 +460,7 @@ export default function App() {
           {campaignProgress.target > 0 && (
             <div className="campaign-progress">
               <div className="campaign-progress__label">
-                <span>Confirmed requests</span>
+                <span>Confirmed connection requests sent</span>
                 <strong>{Math.min(campaignProgress.sent, campaignProgress.target)} / {campaignProgress.target}</strong>
               </div>
               <div
@@ -457,42 +477,141 @@ export default function App() {
                 />
               </div>
               <span className="campaign-progress__hint">
-                Counts only requests confirmed by LinkedIn.
+                Strict counting: only requests verified and confirmed by LinkedIn are counted towards target.
               </span>
             </div>
           )}
 
+          {/* 6 Aligned Metric Cards */}
           <div className="kpi-grid">
-            <div style={{ padding: '8px 12px', backgroundColor: '#F8FAFC', borderRadius: '6px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Requests sent</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#057642', marginTop: '2px' }}>{stats.sent}</div>
+            {/* 1. Requests Sent */}
+            <div className="kpi-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Requests sent</span>
+                <div style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '7px',
+                  backgroundColor: 'var(--success-bg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--success-green)'
+                }}>
+                  <CheckCircle size={14} />
+                </div>
+              </div>
+              <div style={{ fontSize: '30px', fontWeight: '600', color: 'var(--success-green)', marginTop: '8px', lineHeight: 1 }}>
+                {stats.sent}
+              </div>
             </div>
 
-            <div style={{ padding: '8px 12px', backgroundColor: '#F8FAFC', borderRadius: '6px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: '500' }}>HR / Talent</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#6B21A8', marginTop: '2px' }}>{stats.salesSent}</div>
+            {/* 2. HR / Talent */}
+            <div className="kpi-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>HR / Talent</span>
+                <div style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '7px',
+                  backgroundColor: 'var(--accent-lavender-bg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--accent-lavender)'
+                }}>
+                  <Users size={14} />
+                </div>
+              </div>
+              <div style={{ fontSize: '30px', fontWeight: '600', color: 'var(--accent-lavender)', marginTop: '8px', lineHeight: 1 }}>
+                {stats.salesSent}
+              </div>
             </div>
 
-            <div style={{ padding: '8px 12px', backgroundColor: '#F8FAFC', borderRadius: '6px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: '500' }}>IT / Engineering</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0A66C2', marginTop: '2px' }}>{stats.itSent}</div>
+            {/* 3. IT / Engineering */}
+            <div className="kpi-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>IT / Engineering</span>
+                <div style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '7px',
+                  backgroundColor: 'var(--action-blue-subtle)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--action-blue)'
+                }}>
+                  <Briefcase size={14} />
+                </div>
+              </div>
+              <div style={{ fontSize: '30px', fontWeight: '600', color: 'var(--action-blue)', marginTop: '8px', lineHeight: 1 }}>
+                {stats.itSent}
+              </div>
             </div>
 
-            <div style={{ padding: '8px 12px', backgroundColor: '#F8FAFC', borderRadius: '6px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Skipped</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-secondary)', marginTop: '2px' }}>{stats.skipped}</div>
+            {/* 4. Skipped */}
+            <div className="kpi-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Skipped</span>
+                <div style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '7px',
+                  backgroundColor: 'var(--surface-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--text-secondary)'
+                }}>
+                  <XCircle size={14} />
+                </div>
+              </div>
+              <div style={{ fontSize: '30px', fontWeight: '600', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: 1 }}>
+                {stats.skipped}
+              </div>
             </div>
 
-            <div style={{ padding: '8px 12px', backgroundColor: '#F8FAFC', borderRadius: '6px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Connected / Pending</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#915907', marginTop: '2px' }}>
+            {/* 5. Connected / Pending */}
+            <div className="kpi-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Connected / Pending</span>
+                <div style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '7px',
+                  backgroundColor: 'var(--warning-bg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--warning-amber)'
+                }}>
+                  <Clock size={14} />
+                </div>
+              </div>
+              <div style={{ fontSize: '30px', fontWeight: '600', color: 'var(--warning-amber)', marginTop: '8px', lineHeight: 1 }}>
                 {(stats.alreadyConnected || 0) + (stats.pending || 0)}
               </div>
             </div>
 
-            <div style={{ padding: '8px 12px', backgroundColor: '#F8FAFC', borderRadius: '6px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Failed</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '700', color: stats.failed > 0 ? '#CC1016' : 'var(--text-muted)', marginTop: '2px' }}>
+            {/* 6. Failed */}
+            <div className="kpi-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Failed</span>
+                <div style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '7px',
+                  backgroundColor: 'var(--error-bg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--error-rose)'
+                }}>
+                  <AlertTriangle size={14} />
+                </div>
+              </div>
+              <div style={{ fontSize: '30px', fontWeight: '600', color: stats.failed > 0 ? 'var(--error-rose)' : 'var(--text-muted)', marginTop: '8px', lineHeight: 1 }}>
                 {stats.failed}
               </div>
             </div>
@@ -520,17 +639,40 @@ export default function App() {
 
             {/* Current Active Campaign Notice */}
             {currentCompany && (
-              <div className="card" style={{ padding: '14px 18px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', backgroundColor: '#FFFFFF' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Building2 size={18} color="#0A66C2" />
+              <div className="card" style={{ padding: '16px 20px', marginBottom: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '9px',
+                    backgroundColor: 'var(--action-blue-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--action-blue)'
+                  }}>
+                    <Building2 size={18} />
+                  </div>
                   <div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Active Target</span>
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: '600', color: '#1D2226' }}>{currentCompany}</h3>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: '600' }}>
+                      Active Target Company
+                    </span>
+                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)', marginTop: '1px' }}>
+                      {currentCompany}
+                    </h3>
                   </div>
                 </div>
                 {currentMessage && (
-                  <div style={{ maxWidth: '620px', fontSize: '0.82rem', color: 'var(--text-secondary)', backgroundColor: '#F8FAFC', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)' }}>
-                    <strong>Note:</strong> "{currentMessage.substring(0, 110)}..."
+                  <div style={{
+                    maxWidth: '620px',
+                    fontSize: '13px',
+                    color: 'var(--text-secondary)',
+                    backgroundColor: 'var(--surface-secondary)',
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-divider)'
+                  }}>
+                    <strong style={{ color: 'var(--text-primary)' }}>Note:</strong> "{currentMessage.substring(0, 110)}..."
                   </div>
                 )}
               </div>
@@ -575,18 +717,22 @@ export default function App() {
         )}
       </main>
 
-      {/* Professional Footer */}
+      {/* Modern Minimalist Footer */}
       <footer style={{
-        borderTop: '1px solid var(--border)',
-        backgroundColor: '#FFFFFF',
-        padding: '16px 20px',
+        borderTop: '1px solid var(--border-divider)',
+        backgroundColor: 'var(--surface-main)',
+        padding: '16px 24px',
         textAlign: 'center',
-        fontSize: '0.8rem',
-        color: 'var(--text-muted)'
+        fontSize: '13px',
+        color: 'var(--text-secondary)'
       }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-          <div>ReferPilot • AI Referral Outreach Assistant</div>
-          <div>Compliant with Rate Limits & Human-in-the-Loop Approval</div>
+        <div style={{ maxWidth: '1260px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>ReferPilot</span>
+            <span>&bull;</span>
+            <span>AI Referral Outreach Dashboard</span>
+          </div>
+          <div>Compliant with Rate Limits &amp; Human-in-the-Loop Safeguards</div>
         </div>
       </footer>
     </div>

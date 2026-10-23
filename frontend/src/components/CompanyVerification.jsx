@@ -3,14 +3,13 @@ import {
   Building2, 
   Globe, 
   Users, 
-  Briefcase, 
   Code, 
   CheckCircle2, 
-  X, 
   Edit3, 
-  ArrowRight,
-  ExternalLink,
-  ShieldCheck
+  ArrowRight, 
+  ExternalLink, 
+  ShieldCheck, 
+  Target 
 } from 'lucide-react';
 
 export default function CompanyVerification({ companySummary, onDecision }) {
@@ -20,28 +19,28 @@ export default function CompanyVerification({ companySummary, onDecision }) {
   if (!companySummary) return null;
 
   return (
-    <div className="card" style={{ padding: '24px', marginBottom: '20px', backgroundColor: '#FFFFFF', borderTop: '3px solid #0A66C2' }}>
+    <div className="card" style={{ padding: '28px', marginBottom: '22px', backgroundColor: 'var(--surface-main)' }}>
       {/* Top Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '14px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <span className="badge badge-success">
               <ShieldCheck size={13} /> Official Page Verified
             </span>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Discovery Stage Complete</span>
+            <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>Discovery Stage Complete</span>
           </div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: '600', color: '#1D2226', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Building2 size={22} color="#0A66C2" />
-            {companySummary.companyName}
+          <h2 style={{ fontSize: '22px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Building2 size={24} color="var(--action-blue)" />
+            <span>{companySummary.companyName}</span>
           </h2>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '6px', fontSize: '0.82rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '8px', fontSize: '13px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
             {companySummary.officialUrl && (
               <a
                 href={companySummary.officialUrl}
                 target="_blank"
                 rel="noreferrer"
-                style={{ color: '#0A66C2', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}
+                style={{ color: 'var(--action-blue)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '500' }}
               >
                 LinkedIn Page <ExternalLink size={12} />
               </a>
@@ -51,15 +50,25 @@ export default function CompanyVerification({ companySummary, onDecision }) {
                 href={companySummary.website}
                 target="_blank"
                 rel="noreferrer"
-                style={{ color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}
+                style={{ color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
               >
                 <Globe size={13} /> Website <ExternalLink size={11} />
               </a>
             )}
-            <span>Industry: <strong style={{ color: '#1D2226' }}>{companySummary.industry || 'Technology'}</strong></span>
-            <span>Location: <strong style={{ color: '#1D2226' }}>{companySummary.location || 'Global'}</strong></span>
+            <span>Industry: <strong style={{ color: 'var(--text-primary)' }}>{companySummary.industry || 'Technology'}</strong></span>
+            <span>Location: <strong style={{ color: 'var(--text-primary)' }}>{companySummary.location || 'Global'}</strong></span>
             {companySummary.followers > 0 && (
-              <span>Followers: <strong style={{ color: '#1D2226' }}>{companySummary.followers.toLocaleString()}</strong></span>
+              <span>Followers: <strong style={{ color: 'var(--text-primary)' }}>{companySummary.followers.toLocaleString()}</strong></span>
+            )}
+            {companySummary.locationFilter && (
+              <span className="badge badge-tech" style={{ fontSize: '12px' }}>
+                📍 Filter: {companySummary.locationFilter}
+              </span>
+            )}
+            {companySummary.genderFilter && companySummary.genderFilter !== 'all' && (
+              <span className="badge badge-talent" style={{ fontSize: '12px' }}>
+                👤 Gender: {companySummary.genderFilter.toUpperCase()}
+              </span>
             )}
           </div>
         </div>
@@ -69,50 +78,50 @@ export default function CompanyVerification({ companySummary, onDecision }) {
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-        gap: '10px',
-        marginBottom: '20px'
+        gap: '12px',
+        marginBottom: '22px'
       }}>
-        <div style={{ backgroundColor: '#F8FAFC', borderRadius: '6px', padding: '12px 14px', border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <Users size={14} color="#56687A" /> People Found
+        <div style={{ backgroundColor: 'var(--surface-secondary)', borderRadius: '10px', padding: '14px 16px', border: '1px solid var(--border-divider)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '500' }}>
+            <Users size={14} color="var(--text-secondary)" /> People Found
           </div>
-          <div style={{ fontSize: '1.35rem', fontWeight: '700', marginTop: '4px', color: '#1D2226' }}>
+          <div style={{ fontSize: '24px', fontWeight: '600', marginTop: '6px', color: 'var(--text-primary)', lineHeight: 1 }}>
             {companySummary.peopleFound}
           </div>
         </div>
 
-        <div style={{ backgroundColor: '#F8FAFC', borderRadius: '6px', padding: '12px 14px', border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: '0.75rem', color: '#6B21A8', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <Users size={14} /> HR / Talent Acquisition
+        <div style={{ backgroundColor: 'var(--surface-secondary)', borderRadius: '10px', padding: '14px 16px', border: '1px solid var(--border-divider)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--accent-lavender)', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '500' }}>
+            <Users size={14} /> HR / Talent
           </div>
-          <div style={{ fontSize: '1.35rem', fontWeight: '700', marginTop: '4px', color: '#6B21A8' }}>
+          <div style={{ fontSize: '24px', fontWeight: '600', marginTop: '6px', color: 'var(--accent-lavender)', lineHeight: 1 }}>
             {companySummary.hrCandidates || 0}
           </div>
         </div>
 
-        <div style={{ backgroundColor: '#F8FAFC', borderRadius: '6px', padding: '12px 14px', border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: '0.75rem', color: '#0A66C2', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <Code size={14} /> IT & Engineering
+        <div style={{ backgroundColor: 'var(--surface-secondary)', borderRadius: '10px', padding: '14px 16px', border: '1px solid var(--border-divider)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--action-blue)', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '500' }}>
+            <Code size={14} /> IT &amp; Engineering
           </div>
-          <div style={{ fontSize: '1.35rem', fontWeight: '700', marginTop: '4px', color: '#0A66C2' }}>
+          <div style={{ fontSize: '24px', fontWeight: '600', marginTop: '6px', color: 'var(--action-blue)', lineHeight: 1 }}>
             {companySummary.itCandidates || 0}
           </div>
         </div>
 
-        <div style={{ backgroundColor: '#F8FAFC', borderRadius: '6px', padding: '12px 14px', border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: '0.75rem', color: '#8A5B00', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <CheckCircle2 size={14} /> Mutuals & Alumni
+        <div style={{ backgroundColor: 'var(--surface-secondary)', borderRadius: '10px', padding: '14px 16px', border: '1px solid var(--border-divider)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--warning-amber)', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '500' }}>
+            <CheckCircle2 size={14} /> Mutuals &amp; Alumni
           </div>
-          <div style={{ fontSize: '1.35rem', fontWeight: '700', marginTop: '4px', color: '#8A5B00' }}>
+          <div style={{ fontSize: '24px', fontWeight: '600', marginTop: '6px', color: 'var(--warning-amber)', lineHeight: 1 }}>
             {companySummary.mutualAlumniCandidates || 0}
           </div>
         </div>
 
-        <div style={{ backgroundColor: '#E6F4EA', borderRadius: '6px', padding: '12px 14px', border: '1px solid #CEEAD6' }}>
-          <div style={{ fontSize: '0.75rem', color: '#057642', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: '600' }}>
-            <CheckCircle2 size={14} /> Target Quota
+        <div style={{ backgroundColor: 'var(--success-bg)', borderRadius: '10px', padding: '14px 16px', border: '1px solid var(--success-border)' }}>
+          <div style={{ fontSize: '12px', color: 'var(--success-green)', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600' }}>
+            <Target size={14} /> Target Quota
           </div>
-          <div style={{ fontSize: '1.35rem', fontWeight: '700', marginTop: '4px', color: '#057642' }}>
+          <div style={{ fontSize: '24px', fontWeight: '600', marginTop: '6px', color: 'var(--success-green)', lineHeight: 1 }}>
             {companySummary.recommendedTargets}
           </div>
         </div>
@@ -120,8 +129,8 @@ export default function CompanyVerification({ companySummary, onDecision }) {
 
       {/* Message Editing Drawer */}
       {isEditingMessage && (
-        <div style={{ marginBottom: '18px', backgroundColor: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-          <label style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '6px', display: 'block', fontWeight: '500' }}>
+        <div style={{ marginBottom: '20px', backgroundColor: 'var(--surface-secondary)', padding: '16px', borderRadius: '10px', border: '1px solid var(--border-divider)' }}>
+          <label style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '6px', display: 'block', fontWeight: '500' }}>
             Update Referral Message for {companySummary.companyName}:
           </label>
           <textarea
@@ -135,11 +144,11 @@ export default function CompanyVerification({ companySummary, onDecision }) {
       )}
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', paddingTop: '16px', borderTop: '1px solid var(--border-divider)' }}>
         <button
           onClick={() => onDecision({ action: 'cancel' })}
           className="btn btn-secondary"
-          style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+          style={{ padding: '8px 16px', fontSize: '13.5px' }}
         >
           Cancel
         </button>
@@ -153,7 +162,7 @@ export default function CompanyVerification({ companySummary, onDecision }) {
             }
           }}
           className="btn btn-secondary"
-          style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+          style={{ padding: '8px 16px', fontSize: '13.5px' }}
         >
           <Edit3 size={14} />
           <span>{isEditingMessage ? 'Save Updated Note' : 'Customize Note'}</span>
@@ -162,7 +171,7 @@ export default function CompanyVerification({ companySummary, onDecision }) {
         <button
           onClick={() => onDecision({ action: 'start' })}
           className="btn btn-primary"
-          style={{ padding: '8px 20px', fontSize: '0.88rem' }}
+          style={{ padding: '8px 22px', fontSize: '14px', fontWeight: '600' }}
         >
           <span>Start Outreach</span>
           <ArrowRight size={15} />

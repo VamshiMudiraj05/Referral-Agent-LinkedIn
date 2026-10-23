@@ -5,7 +5,8 @@ import {
   Square, 
   ExternalLink, 
   Edit2, 
-  AlertCircle
+  AlertCircle,
+  MapPin
 } from 'lucide-react';
 
 export default function ApprovalModal({ data, onDecision }) {
@@ -25,7 +26,8 @@ export default function ApprovalModal({ data, onDecision }) {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+      backgroundColor: 'rgba(23, 25, 29, 0.45)',
+      backdropFilter: 'blur(3px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -35,65 +37,65 @@ export default function ApprovalModal({ data, onDecision }) {
       <div style={{
         maxWidth: '580px',
         width: '100%',
-        backgroundColor: '#FFFFFF',
-        borderRadius: '8px',
-        border: '1px solid var(--border)',
-        boxShadow: '0 12px 36px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08)',
+        backgroundColor: 'var(--surface-main)',
+        borderRadius: 'var(--radius-card)',
+        border: '1px solid var(--border-divider)',
+        boxShadow: 'var(--shadow-modal)',
         overflow: 'hidden'
       }}>
         {/* Modal Header */}
         <div style={{
-          padding: '16px 20px',
-          borderBottom: '1px solid var(--border)',
+          padding: '18px 22px',
+          borderBottom: '1px solid var(--border-divider)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          backgroundColor: '#FFFFFF'
+          backgroundColor: 'var(--surface-main)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
             <span className="status-dot waiting" />
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '600', color: '#1D2226' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>
               Human Approval Required
             </h3>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="badge badge-neutral">Priority #{priorityRank || 1}</span>
-            <span className="badge badge-tech" style={{ fontWeight: '600' }}>
+            <span className="badge badge-neutral" style={{ fontSize: '11.5px' }}>Priority #{priorityRank || 1}</span>
+            <span className="badge badge-tech" style={{ fontWeight: '600', fontSize: '11.5px' }}>
               {score || 80}% Relevant
             </span>
           </div>
         </div>
 
         {/* Modal Body */}
-        <div style={{ padding: '20px' }}>
+        <div style={{ padding: '22px' }}>
           {/* Candidate Profile Card */}
           <div style={{
-            backgroundColor: '#F8FAFC',
-            borderRadius: '8px',
-            border: '1px solid var(--border)',
-            padding: '16px',
+            backgroundColor: 'var(--surface-secondary)',
+            borderRadius: 'var(--radius-card-sm)',
+            border: '1px solid var(--border-divider)',
+            padding: '18px',
             marginBottom: '18px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
               {candidate.avatar ? (
                 <img
                   src={candidate.avatar}
                   alt={candidate.personName}
-                  style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }}
+                  style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-divider)' }}
                 />
               ) : (
                 <div style={{
                   width: '48px',
                   height: '48px',
                   borderRadius: '50%',
-                  backgroundColor: '#EBF4FD',
-                  color: '#0A66C2',
+                  backgroundColor: 'var(--action-blue-subtle)',
+                  color: 'var(--action-blue)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: '700',
-                  fontSize: '1.1rem',
-                  border: '1px solid #CBE2FB'
+                  fontSize: '17px',
+                  border: '1px solid var(--action-blue-border)'
                 }}>
                   {candidate.personName ? candidate.personName.charAt(0) : 'U'}
                 </div>
@@ -101,7 +103,7 @@ export default function ApprovalModal({ data, onDecision }) {
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: '600', color: '#1D2226' }}>
+                  <h4 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>
                     {candidate.personName}
                   </h4>
                   {candidate.profileUrl && (
@@ -109,7 +111,7 @@ export default function ApprovalModal({ data, onDecision }) {
                       href={candidate.profileUrl}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ color: '#0A66C2', display: 'flex', alignItems: 'center' }}
+                      style={{ color: 'var(--action-blue)', display: 'flex', alignItems: 'center' }}
                       title="View Profile"
                     >
                       <ExternalLink size={13} />
@@ -117,24 +119,41 @@ export default function ApprovalModal({ data, onDecision }) {
                   )}
                 </div>
 
-                <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                <div style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: 1.35 }}>
                   {candidate.verifiedTitle || candidate.jobTitle}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-                  <span className="badge badge-neutral" style={{ fontSize: '0.72rem' }}>
+                {(candidate.verifiedLocation || candidate.location) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                    <MapPin size={12} color="var(--action-blue)" />
+                    <span>{candidate.verifiedLocation || candidate.location}</span>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                  <span className="badge badge-neutral" style={{ fontSize: '11.5px' }}>
                     {companyName}
                   </span>
-                  <span className="badge badge-tech" style={{ fontSize: '0.72rem' }}>
+                  <span className="badge badge-tech" style={{ fontSize: '11.5px' }}>
                     {candidate.department}
                   </span>
+                  {candidate.gender === 'female' && (
+                    <span className="badge" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-rose)', border: '1px solid var(--error-border)', fontSize: '11.5px' }}>
+                      ♀ Female {candidate.pronouns ? `(${candidate.pronouns})` : ''}
+                    </span>
+                  )}
+                  {candidate.gender === 'male' && (
+                    <span className="badge" style={{ backgroundColor: 'var(--action-blue-subtle)', color: 'var(--action-blue)', border: '1px solid var(--action-blue-border)', fontSize: '11.5px' }}>
+                      ♂ Male {candidate.pronouns ? `(${candidate.pronouns})` : ''}
+                    </span>
+                  )}
                   {candidate.isMutual && (
-                    <span className="badge badge-mutual" style={{ fontSize: '0.72rem' }}>
+                    <span className="badge badge-mutual" style={{ fontSize: '11.5px' }}>
                       🤝 Mutual Connection
                     </span>
                   )}
                   {candidate.isAlumni && (
-                    <span className="badge badge-alumni" style={{ fontSize: '0.72rem' }}>
+                    <span className="badge badge-alumni" style={{ fontSize: '11.5px' }}>
                       🎓 Alumni
                     </span>
                   )}
@@ -144,7 +163,7 @@ export default function ApprovalModal({ data, onDecision }) {
 
             {/* Score Breakdown factors */}
             {candidate.breakdown && (
-              <div style={{ display: 'flex', gap: '6px', marginTop: '12px', flexWrap: 'wrap', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', fontSize: '0.74rem' }}>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap', paddingTop: '10px', borderTop: '1px solid var(--border-divider)', fontSize: '12px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Score factors:</span>
                 <span style={{ color: 'var(--text-secondary)' }}>Dept: +{candidate.breakdown.department}</span>
                 <span style={{ color: 'var(--text-secondary)' }}>• Seniority: +{candidate.breakdown.seniority}</span>
@@ -157,117 +176,119 @@ export default function ApprovalModal({ data, onDecision }) {
           {!canSend ? (
             <div role="alert" style={{
               marginBottom: '18px',
-              padding: '12px 14px',
-              border: '1px solid #F1C7C7',
-              borderRadius: '6px',
-              backgroundColor: '#FFF5F5',
-              color: '#8A1C1C',
-              fontSize: '0.85rem',
+              padding: '13px 15px',
+              border: '1px solid var(--error-border)',
+              borderRadius: '8px',
+              backgroundColor: 'var(--error-bg)',
+              color: 'var(--error-rose)',
+              fontSize: '13.5px',
               lineHeight: '1.5'
             }}>
               Profile verification failed. Sending is disabled. {verificationReason}
             </div>
           ) : (
             <div style={{ marginBottom: '18px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <label style={{ fontSize: '0.82rem', fontWeight: '600', color: '#1D2226' }}>
-                Connection note preview
-              </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  color: isOverLimit ? '#CC1016' : charCount > 260 ? '#915907' : 'var(--text-muted)'
-                }}>
-                  {charCount} / 300 chars
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(!isEditing)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#0A66C2',
-                    cursor: 'pointer',
-                    fontSize: '0.78rem',
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                  Connection note preview
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{
+                    fontSize: '12px',
                     fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '3px'
-                  }}
-                >
-                  <Edit2 size={12} />
-                  <span>{isEditing ? 'Done' : 'Edit Note'}</span>
-                </button>
+                    color: isOverLimit ? 'var(--error-rose)' : charCount > 260 ? 'var(--warning-amber)' : 'var(--text-secondary)'
+                  }}>
+                    {charCount} / 300 chars
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(!isEditing)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--action-blue)',
+                      cursor: 'pointer',
+                      fontSize: '12.5px',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <Edit2 size={12} />
+                    <span>{isEditing ? 'Done Editing' : 'Edit Note'}</span>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {isEditing ? (
-              <textarea
-                className="textarea"
-                value={currentMessage}
-                onChange={(e) => setCurrentMessage(e.target.value)}
-                rows={3}
-                style={{ borderColor: isOverLimit ? '#CC1016' : undefined }}
-              />
-            ) : (
-              <div style={{
-                backgroundColor: '#F8FAFC',
-                border: '1px solid var(--border)',
-                borderRadius: '6px',
-                padding: '12px 14px',
-                fontSize: '0.85rem',
-                lineHeight: '1.5',
-                color: '#1D2226',
-                fontStyle: 'normal'
-              }}>
-                "{currentMessage}"
-              </div>
-            )}
+              {isEditing ? (
+                <textarea
+                  className="textarea"
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  rows={3}
+                  style={{ borderColor: isOverLimit ? 'var(--error-rose)' : undefined }}
+                />
+              ) : (
+                <div style={{
+                  backgroundColor: 'var(--surface-secondary)',
+                  border: '1px solid var(--border-divider)',
+                  borderRadius: '8px',
+                  padding: '12px 14px',
+                  fontSize: '13.5px',
+                  lineHeight: '1.5',
+                  color: 'var(--text-primary)'
+                }}>
+                  "{currentMessage}"
+                </div>
+              )}
 
-            {isOverLimit && (
-              <div style={{ color: '#CC1016', fontSize: '0.76rem', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <AlertCircle size={13} /> Note exceeds LinkedIn's 300 character limit! Please shorten before sending.
-              </div>
-            )}
+              {isOverLimit && (
+                <div style={{ color: 'var(--error-rose)', fontSize: '12.5px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <AlertCircle size={14} /> Note exceeds LinkedIn's 300 character limit! Please shorten before sending.
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Modal Actions */}
         <div style={{
-          padding: '14px 20px',
-          borderTop: '1px solid var(--border)',
-          backgroundColor: '#F8FAFC',
+          padding: '16px 22px',
+          borderTop: '1px solid var(--border-divider)',
+          backgroundColor: 'var(--surface-secondary)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '10px'
+          gap: '12px'
         }}>
           <button
             onClick={() => onDecision({ action: 'stop' })}
             className="btn btn-danger"
-            style={{ padding: '7px 12px', fontSize: '0.82rem' }}
+            style={{ padding: '8px 14px', fontSize: '13px' }}
           >
-            <Square size={13} fill="#CC1016" /> Stop Campaign
+            <Square size={13} fill="currentColor" />
+            <span>Stop Campaign</span>
           </button>
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={() => onDecision({ action: 'skip' })}
               className="btn btn-secondary"
-              style={{ padding: '7px 14px', fontSize: '0.82rem' }}
+              style={{ padding: '8px 15px', fontSize: '13px' }}
             >
-              <SkipForward size={14} /> Skip Candidate
+              <SkipForward size={14} />
+              <span>Skip Candidate</span>
             </button>
 
             <button
               onClick={() => canSend && onDecision({ action: 'approve', editedMessage: currentMessage })}
               disabled={!canSend || isOverLimit}
               className="btn btn-primary"
-              style={{ padding: '7px 18px', fontSize: '0.84rem', opacity: !canSend ? 0.55 : 1 }}
+              style={{ padding: '8px 18px', fontSize: '13.5px', opacity: !canSend ? 0.55 : 1 }}
             >
-              <Send size={14} /> {canSend ? 'Approve & Send' : 'Sending Disabled'}
+              <Send size={14} />
+              <span>{canSend ? 'Approve & Send' : 'Sending Disabled'}</span>
             </button>
           </div>
         </div>

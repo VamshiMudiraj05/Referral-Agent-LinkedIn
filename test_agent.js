@@ -244,6 +244,19 @@ async function testOutreachRequiresStrictProfileVerification() {
   const verificationError = await verifier.verifyCandidateProfile(candidate, 'Cohere Health');
   assert.strictEqual(verificationError.isValid, false, 'Verification errors must fail closed');
 
+  // Location filter verification on profile page
+  page.evaluate = async () => ({ ...verificationResult, verifiedLocation: 'Milan, Italy' });
+  const conflictingLocation = await verifier.verifyCandidateProfile(candidate, 'Cohere Health', 'Hyderabad');
+  assert.strictEqual(conflictingLocation.isValid, false, 'Profile with conflicting location must be rejected');
+  assert.strictEqual(conflictingLocation.reason.includes('location'), true);
+
+  page.evaluate = async () => ({ ...verificationResult, verifiedLocation: 'Hyderabad, Telangana, India' });
+  const matchingLocation = await verifier.verifyCandidateProfile(candidate, 'Cohere Health', 'Hyderabad');
+  assert.strictEqual(matchingLocation.isValid, true, 'Profile with matching location must be accepted');
+
+  const defaultNoFilter = await verifier.verifyCandidateProfile(candidate, 'Cohere Health', '');
+  assert.strictEqual(defaultNoFilter.isValid, true, 'Candidate with no location filter must be accepted');
+
   let pageTouched = false;
   const outreach = new OutreachAgent(
     { page: { locator: () => { pageTouched = true; } } },
@@ -596,12 +609,98 @@ function testCampaignProgressBroadcast() {
   ]);
 }
 
+function testLocationAndGenderFilters() {
+  console.log('\n--- Testing Location and Gender Filter Module ---');
+  const GenderDetector = require('./agents/GenderDetector');
+  const LocationMatcher = require('./agents/LocationMatcher');
+
+  // Test Gender Detection
+  const femaleFromName = GenderDetector.detectGender({ personName: 'Priya Sharma' });
+  assert.strictEqual(femaleFromName.gender, 'female');
+  assert.strictEqual(femaleFromName.method, 'first_name');
+
+  const maleFromName = GenderDetector.detectGender({ personName: 'Sai Vivek Varma' });
+  assert.strictEqual(maleFromName.gender, 'male');
+  assert.strictEqual(maleFromName.method, 'first_name');
+
+  const femaleFromPronouns = GenderDetector.detectGender({ personName: 'Alex Jordan', headline: 'Engineer (She/Her)' });
+  assert.strictEqual(femaleFromPronouns.gender, 'female');
+  assert.strictEqual(femaleFromPronouns.method, 'pronouns');
+
+  const maleFromPronouns = GenderDetector.detectGender({ personName: 'Taylor Smith', cardText: 'he/him' });
+  assert.strictEqual(maleFromPronouns.gender, 'male');
+  assert.strictEqual(maleFromPronouns.method, 'pronouns');
+
+  console.log('✓ GenderDetector accurately detects female, male, and pronoun signals');
+
+  // Test Location Matcher
+  const candidateHyd = { personName: 'Rahul', location: 'Hyderabad, Telangana, India' };
+  const candidateSF = { personName: 'John', cardText: 'San Francisco Bay Area\n500+ connections' };
+  const candidateLondon = { personName: 'Emma', location: 'London, Greater London, United Kingdom' };
+
+  assert.strictEqual(LocationMatcher.matchesFilter(candidateHyd, 'Hyderabad'), true);
+  assert.strictEqual(LocationMatcher.matchesFilter(candidateHyd, 'India'), true);
+  assert.strictEqual(LocationMatcher.matchesFilter(candidateHyd, 'London'), false);
+
+  assert.strictEqual(LocationMatcher.matchesFilter(candidateSF, 'Bay Area'), true);
+  assert.strictEqual(LocationMatcher.matchesFilter(candidateSF, 'USA'), true);
+  assert.strictEqual(LocationMatcher.matchesFilter(candidateSF, 'India'), false);
+
+  assert.strictEqual(LocationMatcher.matchesFilter(candidateLondon, 'United Kingdom'), true);
+  assert.strictEqual(LocationMatcher.matchesFilter(candidateLondon, 'UK'), true);
+  assert.strictEqual(LocationMatcher.matchesFilter(candidateLondon, 'Hyderabad'), false);
+
+  // Blank/Any matches all
+  assert.strictEqual(LocationMatcher.matchesFilter(candidateHyd, ''), true);
+  assert.strictEqual(LocationMatcher.matchesFilter(candidateHyd, 'all'), true);
+
+  console.log('✓ LocationMatcher accurately normalizes and matches cities, regions, and countries');
+
+  // Test CandidateRankingAgent Filter Integration
+  const filterRanker = new CandidateRankingAgent('mutuals_alumni_first');
+  const pool = [
+    { personName: 'Sneha Patel', jobTitle: 'Software Engineer', location: 'Hyderabad, India', profileUrl: 'https://linkedin.com/in/sneha' },
+    { personName: 'Amit Verma', jobTitle: 'Technical Recruiter', location: 'Bengaluru, India', profileUrl: 'https://linkedin.com/in/amit' },
+    { personName: 'Sarah Jenkins', jobTitle: 'QA Lead', location: 'San Francisco, CA', profileUrl: 'https://linkedin.com/in/sarah' },
+    { personName: 'David Lee', jobTitle: 'Backend Engineer', location: 'Hyderabad, Telangana, India', profileUrl: 'https://linkedin.com/in/david' }
+  ];
+
+  // 1. Default (All): all pass without disturbing flow
+  filterRanker.setLocationFilter('');
+  filterRanker.setGenderFilter('all');
+  const defaultRanked = filterRanker.rankCandidates(pool);
+  assert.strictEqual(defaultRanked.length, 4, 'Default filters should include all valid candidates');
+
+  // 2. Gender Filter = Female
+  filterRanker.setGenderFilter('female');
+  const femaleOnly = filterRanker.rankCandidates(pool);
+  assert.strictEqual(femaleOnly.length, 2, 'Only female candidates should be included');
+  assert.deepStrictEqual(new Set(femaleOnly.map(c => c.personName)), new Set(['Sneha Patel', 'Sarah Jenkins']));
+
+  // 3. Location Filter = Hyderabad
+  filterRanker.setGenderFilter('all');
+  filterRanker.setLocationFilter('Hyderabad');
+  const hydOnly = filterRanker.rankCandidates(pool);
+  assert.strictEqual(hydOnly.length, 2, 'Only Hyderabad candidates should be included');
+  assert.deepStrictEqual(new Set(hydOnly.map(c => c.personName)), new Set(['Sneha Patel', 'David Lee']));
+
+  // 4. Combined Filter: Female + Hyderabad
+  filterRanker.setGenderFilter('female');
+  filterRanker.setLocationFilter('Hyderabad');
+  const hydFemaleOnly = filterRanker.rankCandidates(pool);
+  assert.strictEqual(hydFemaleOnly.length, 1);
+  assert.strictEqual(hydFemaleOnly[0].personName, 'Sneha Patel');
+
+  console.log('✓ CandidateRankingAgent cleanly isolates target candidates according to Location and Gender filters while leaving default flow intact');
+}
+
 testOutreachRequiresStrictProfileVerification()
   .then(() => testThreeDotMenuConnectPath())
   .then(() => testPendingProfileConfirmsSuccessfulSend())
   .then(() => testCampaignTargetAndAutomaticMode())
   .then(() => testCampaignStopsOnUnconfirmedSend())
   .then(() => testCampaignProgressBroadcast())
+  .then(() => testLocationAndGenderFilters())
   .then(() => console.log('✓ Automatic mode honors selected approval setting and successful-send target'))
   .then(() => console.log('✓ Three-dot Connect path fills the note and clicks Send only after validating it'))
   .then(() => console.log('✓ Strict identity/company verification and fail-closed outreach enforced'))

@@ -5,7 +5,6 @@ import {
   ArrowDown, 
   Search, 
   CheckCircle2, 
-  AlertTriangle, 
   AlertCircle, 
   ArrowRight, 
   XCircle,
@@ -31,49 +30,49 @@ export default function LiveActivityLog({ logs = [], onClear }) {
     switch (type) {
       case 'success':
         return {
-          icon: <CheckCircle2 size={15} color="#057642" />,
-          textColor: '#1D2226'
+          icon: <CheckCircle2 size={15} color="var(--success-green)" />,
+          textColor: 'var(--text-primary)'
         };
       case 'warning':
         return {
-          icon: <Clock size={15} color="#915907" />,
-          textColor: '#915907'
+          icon: <Clock size={15} color="var(--warning-amber)" />,
+          textColor: 'var(--warning-amber)'
         };
       case 'error':
         return {
-          icon: <XCircle size={15} color="#CC1016" />,
-          textColor: '#CC1016'
+          icon: <XCircle size={15} color="var(--error-rose)" />,
+          textColor: 'var(--error-rose)'
         };
       case 'alert':
         return {
-          icon: <AlertCircle size={15} color="#CC1016" />,
-          textColor: '#CC1016'
+          icon: <AlertCircle size={15} color="var(--error-rose)" />,
+          textColor: 'var(--error-rose)'
         };
       default:
         return {
-          icon: <ArrowRight size={15} color="#0A66C2" />,
-          textColor: '#1D2226'
+          icon: <ArrowRight size={15} color="var(--action-blue)" />,
+          textColor: 'var(--text-primary)'
         };
     }
   };
 
   return (
-    <div className="card" style={{ padding: '20px 24px', backgroundColor: '#FFFFFF' }}>
+    <div className="card" style={{ padding: '24px 28px', backgroundColor: 'var(--surface-main)' }}>
       {/* Activity Header & Controls */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '16px',
+        marginBottom: '18px',
         flexWrap: 'wrap',
         gap: '12px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Activity size={18} color="#0A66C2" />
-          <h3 style={{ fontSize: '1.05rem', fontWeight: '600', color: '#1D2226' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+          <Activity size={19} color="var(--action-blue)" />
+          <h3 style={{ fontSize: '17px', fontWeight: '600', color: 'var(--text-primary)' }}>
             Campaign Activity Feed
           </h3>
-          <span className="badge badge-neutral" style={{ fontSize: '0.72rem' }}>
+          <span className="badge badge-neutral" style={{ fontSize: '11.5px' }}>
             {logs.length} updates
           </span>
         </div>
@@ -87,23 +86,23 @@ export default function LiveActivityLog({ logs = [], onClear }) {
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               style={{
-                backgroundColor: '#F8FAFC',
-                border: '1px solid var(--border)',
-                borderRadius: '6px',
-                padding: '6px 10px 6px 28px',
-                color: '#1D2226',
-                fontSize: '0.8rem',
+                backgroundColor: 'var(--surface-input)',
+                border: '1px solid var(--border-divider)',
+                borderRadius: '8px',
+                padding: '6px 10px 6px 30px',
+                color: 'var(--text-primary)',
+                fontSize: '13px',
                 outline: 'none',
-                width: '150px'
+                width: '160px'
               }}
             />
-            <Search size={13} color="var(--text-muted)" style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)' }} />
+            <Search size={13} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
           </div>
 
           <button
             onClick={() => setAutoScroll(!autoScroll)}
             className="btn btn-secondary"
-            style={{ padding: '5px 10px', fontSize: '0.78rem' }}
+            style={{ padding: '6px 12px', fontSize: '13px' }}
             title={autoScroll ? 'Disable Auto-scroll' : 'Enable Auto-scroll'}
           >
             <ArrowDown size={13} style={{ opacity: autoScroll ? 1 : 0.4 }} />
@@ -113,7 +112,7 @@ export default function LiveActivityLog({ logs = [], onClear }) {
           <button
             onClick={onClear}
             className="btn btn-secondary"
-            style={{ padding: '5px 10px', fontSize: '0.78rem' }}
+            style={{ padding: '6px 12px', fontSize: '13px' }}
             title="Clear Activity Feed"
           >
             <Trash2 size={13} />
@@ -126,15 +125,15 @@ export default function LiveActivityLog({ logs = [], onClear }) {
       <div
         ref={containerRef}
         className="activity-feed-container"
-        style={{ minHeight: '280px', maxHeight: '420px', backgroundColor: '#FFFFFF' }}
+        style={{ minHeight: '300px', maxHeight: '440px' }}
       >
         {filteredLogs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-muted)' }}>
-            <Activity size={32} strokeWidth={1.5} style={{ margin: '0 auto 10px', opacity: 0.5 }} />
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+          <div style={{ textAlign: 'center', padding: '52px 20px', color: 'var(--text-muted)' }}>
+            <Activity size={36} strokeWidth={1.5} style={{ margin: '0 auto 10px', opacity: 0.5 }} />
+            <div style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: '500' }}>
               No campaign activities yet.
             </div>
-            <div style={{ fontSize: '0.8rem', marginTop: '2px' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
               Launch a campaign from the setup tab to observe live automated actions.
             </div>
           </div>
@@ -151,7 +150,7 @@ export default function LiveActivityLog({ logs = [], onClear }) {
                   {visual.icon}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: visual.textColor, fontSize: '0.85rem', wordBreak: 'break-word', lineHeight: '1.4' }}>
+                  <div style={{ color: visual.textColor, fontSize: '13.5px', wordBreak: 'break-word', lineHeight: '1.45' }}>
                     {log.message}
                   </div>
                 </div>

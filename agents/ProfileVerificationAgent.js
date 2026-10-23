@@ -1,3 +1,5 @@
+const LocationMatcher = require('./LocationMatcher');
+
 class ProfileVerificationAgent {
   constructor(browserController, safetyController, logger = console.log) {
     this.browser = browserController;
@@ -5,7 +7,7 @@ class ProfileVerificationAgent {
     this.logger = logger;
   }
 
-  async verifyCandidateProfile(candidate, targetCompanyName) {
+  async verifyCandidateProfile(candidate, targetCompanyName, locationFilter = '') {
     const page = this.browser.page;
     if (!page) throw new Error('Browser page not available');
 
@@ -103,11 +105,15 @@ class ProfileVerificationAgent {
           }
         }
 
+        const locationEl = document.querySelector('.text-body-small.inline.t-black--light.break-words, span[class*="top-card__subline-item"], .pv-text-details__left-panel > span.text-body-small');
+        const verifiedLocation = locationEl ? locationEl.innerText.trim() : '';
+
         return {
           verifiedName: rawName,
           headline,
           currentCompanyFound,
           verifiedTitle,
+          verifiedLocation,
           isFirstDegree: /(?:^|\n)\s*1st\s*(?:\n|$)/i.test(profileHeaderText),
           isPending: Array.from(document.querySelectorAll('main button, main [role="button"]'))
             .some(button => /^\s*pending\s*$/i.test((button.innerText || button.getAttribute('aria-label') || '').trim()))
@@ -117,11 +123,21 @@ class ProfileVerificationAgent {
       });
 
       if (discoveredOnCompanyPeoplePage) {
+        if (locationFilter && locationFilter.trim()) {
+          const profileLoc = verificationResult.verifiedLocation || candidate.location || '';
+          if (profileLoc && !LocationMatcher.matchesFilter({ location: profileLoc, verifiedLocation: profileLoc }, locationFilter)) {
+            const reason = `Profile location ("${profileLoc}") does not match target location filter ("${locationFilter}")`;
+            this.logger(`Refusing outreach: ${reason}`, 'warning');
+            return { isValid: false, reason, candidate };
+          }
+        }
+
         const verifiedProfileUrl = page.url().split('?')[0].replace(/\/$/, '');
         return {
           isValid: true,
           verifiedName: candidate.personName,
           verifiedTitle: candidate.jobTitle || candidate.headline || '',
+          verifiedLocation: verificationResult.verifiedLocation || candidate.location || '',
           verifiedProfileUrl,
           verifiedCompany: targetCompanyName,
           isAlreadyConnected: verificationResult.isFirstDegree,
@@ -160,6 +176,15 @@ class ProfileVerificationAgent {
         const reason = `Could not verify a current Experience role at "${targetCompanyName}" for ${verificationResult.verifiedName}. Headline alone is not accepted as proof.`;
         this.logger(`Refusing outreach: ${reason}`, 'warning');
         return { isValid: false, reason, candidate };
+      }
+
+      if (locationFilter && locationFilter.trim()) {
+        const profileLoc = verificationResult.verifiedLocation || candidate.location || '';
+        if (profileLoc && !LocationMatcher.matchesFilter({ location: profileLoc, verifiedLocation: profileLoc }, locationFilter)) {
+          const reason = `Profile location ("${profileLoc}") does not match target location filter ("${locationFilter}")`;
+          this.logger(`Refusing outreach: ${reason}`, 'warning');
+          return { isValid: false, reason, candidate };
+        }
       }
 
       const verifiedProfileUrl = page.url().split('?')[0].replace(/\/$/, '');

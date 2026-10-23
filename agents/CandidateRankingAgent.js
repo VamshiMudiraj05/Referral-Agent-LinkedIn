@@ -1,6 +1,11 @@
+const LocationMatcher = require('./LocationMatcher');
+const GenderDetector = require('./GenderDetector');
+
 class CandidateRankingAgent {
   constructor(strategy = 'mutuals_alumni_first') {
     this.strategy = strategy; // 'mutuals_alumni_first' | 'hr_first' | 'it_first' | 'combined'
+    this.locationFilter = '';
+    this.genderFilter = 'all'; // 'all' | 'female' | 'male'
 
     // HR & Talent Acquisition keywords
     this.hrKeywords = [
@@ -44,6 +49,14 @@ class CandidateRankingAgent {
     this.strategy = strategy;
   }
 
+  setLocationFilter(location) {
+    this.locationFilter = (location || '').trim();
+  }
+
+  setGenderFilter(gender) {
+    this.genderFilter = (gender || 'all').toLowerCase().trim();
+  }
+
   isExcluded(title = '') {
     const lower = title.toLowerCase();
 
@@ -55,7 +68,8 @@ class CandidateRankingAgent {
     // Check if it's an excluded role (Sales, Finance, Marketing, Legal, etc.)
     const isHrOrTech = this.hrKeywords.some(k => lower.includes(k)) || 
                        this.techKeywords.some(k => lower.includes(k)) ||
-                       lower.includes('engineer') || lower.includes('developer') || lower.includes('recruiter');
+                       lower.includes('engineer') || lower.includes('developer') || lower.includes('recruiter') ||
+                       lower.includes('qa') || lower.includes('test') || lower.includes('architect');
 
     if (!isHrOrTech) {
       return { excluded: true, reason: 'Not an HR/Talent or IT/Engineering role' };
@@ -160,10 +174,77 @@ class CandidateRankingAgent {
     const baseScore = deptScore + seniorityScore;
     const totalScore = Math.min(100, Math.max(10, baseScore + mutualScore + alumniScore));
 
+    // Gender detection
+    const genderInfo = GenderDetector.detectGender(candidate);
+    const detectedGender = candidate.gender || genderInfo.gender;
+    const pronouns = candidate.pronouns || genderInfo.pronouns;
+
+    // Location detection
+    const candidateLocation = candidate.location || LocationMatcher.extractLocationFromCard(candidate.cardText || '', candidate.rawLocation || '');
+
+    // Gender Filter check
+    if (this.genderFilter && this.genderFilter !== 'all') {
+      const matchesGender = GenderDetector.matchesFilter({ ...candidate, gender: detectedGender }, this.genderFilter);
+      if (!matchesGender) {
+        return {
+          ...candidate,
+          gender: detectedGender,
+          pronouns,
+          genderConfidence: genderInfo.confidence,
+          location: candidateLocation,
+          department: dept,
+          score: 0,
+          isExcluded: true,
+          exclusionReason: `Does not match target gender filter (${this.genderFilter})`,
+          seniorityLevel: seniority.level,
+          isMutual,
+          isAlumni,
+          breakdown: { department: 0, seniority: 0, connection: 0, mutual: 0, alumni: 0 }
+        };
+      }
+    }
+
+    // Location Filter check
+    let locationScoreBonus = 0;
+    if (this.locationFilter && this.locationFilter.trim()) {
+      const matchesLoc = LocationMatcher.matchesFilter({ ...candidate, location: candidateLocation }, this.locationFilter);
+      const hasExplicitLocation = !!candidateLocation;
+
+      // Only exclude if the card explicitly states a location that conflicts with filter
+      if (hasExplicitLocation && !matchesLoc) {
+        return {
+          ...candidate,
+          gender: detectedGender,
+          pronouns,
+          genderConfidence: genderInfo.confidence,
+          location: candidateLocation,
+          department: dept,
+          score: 0,
+          isExcluded: true,
+          exclusionReason: `Explicit location ("${candidateLocation}") does not match location filter ("${this.locationFilter}")`,
+          seniorityLevel: seniority.level,
+          isMutual,
+          isAlumni,
+          breakdown: { department: 0, seniority: 0, connection: 0, mutual: 0, alumni: 0 }
+        };
+      }
+
+      // If candidate card explicitly matches, prioritize with high score boost
+      if (hasExplicitLocation && matchesLoc) {
+        locationScoreBonus = 25;
+      }
+    }
+
+    const finalScore = Math.min(100, totalScore + locationScoreBonus);
+
     return {
       ...candidate,
+      gender: detectedGender,
+      pronouns,
+      genderConfidence: genderInfo.confidence,
+      location: candidateLocation,
       department: dept,
-      score: totalScore,
+      score: finalScore,
       seniorityLevel: seniority.level,
       isMutual,
       isAlumni,

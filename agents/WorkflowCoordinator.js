@@ -74,11 +74,16 @@ class WorkflowCoordinator {
     this.isPaused = false;
     const maxPerCompany = Math.min(25, Math.max(1, parseInt(config.maxPerCompany, 10) || 10));
     const campaignId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const locationFilter = (config.locationFilter || '').trim();
+    const genderFilter = (config.genderFilter || 'all').toLowerCase().trim();
+
     this.currentCampaign = {
       id: campaignId,
       companies: config.companies || [config.companyName],
       referralMessage: config.referralMessage,
       strategy: config.strategy || 'sales_then_it',
+      locationFilter,
+      genderFilter,
       maxPerCompany,
       maxSession: Math.min(25, Math.max(1, parseInt(config.maxSession, 10) || maxPerCompany)),
       approvalMode: config.approvalMode !== false,
@@ -95,12 +100,20 @@ class WorkflowCoordinator {
     this.safety.maxRequestsPerCompany = this.currentCampaign.maxPerCompany;
     this.safety.maxRequestsPerSession = this.currentCampaign.maxSession;
     this.rankingAgent.setStrategy(this.currentCampaign.strategy);
+    this.rankingAgent.setLocationFilter(this.currentCampaign.locationFilter);
+    this.rankingAgent.setGenderFilter(this.currentCampaign.genderFilter);
     this.browser.setHeadless(this.currentCampaign.headless);
 
     this.log(`🚀 Starting LinkedIn Referral Outreach Agent Campaign`);
     this.log(`Target Companies: ${this.currentCampaign.companies.join(', ')}`);
     this.log(`Mode: ${this.currentCampaign.approvalMode ? 'Human Approval Required' : 'Automatic Outreach'}`);
     this.log(`Priority Strategy: ${this.currentCampaign.strategy.replace(/_/g, ' ').toUpperCase()}`);
+    if (this.currentCampaign.locationFilter) {
+      this.log(`📍 Location Filter: "${this.currentCampaign.locationFilter}"`);
+    }
+    if (this.currentCampaign.genderFilter && this.currentCampaign.genderFilter !== 'all') {
+      this.log(`👤 Gender Filter: "${this.currentCampaign.genderFilter.toUpperCase()}"`);
+    }
     this.broadcast({
       type: 'CAMPAIGN_PROGRESS',
       sent: 0,
@@ -170,7 +183,12 @@ class WorkflowCoordinator {
 
     // 2. Discover People from the People tab
     this.log(`Step 2: Accessing official People section...`);
-    const rawCandidates = await this.peopleAgent.discoverPeople(officialCompany.officialUrl);
+    const rawCandidates = await this.peopleAgent.discoverPeople(
+      officialCompany.officialUrl,
+      undefined,
+      80,
+      this.currentCampaign.locationFilter
+    );
     const candidatesWithCompanyEvidence = rawCandidates.map(candidate => ({
       ...candidate,
       discoveredAtCompany: companyName
@@ -183,10 +201,20 @@ class WorkflowCoordinator {
     const hrCount = rankedCandidates.filter(c => c.department === 'HR / Talent').length;
     const itCount = rankedCandidates.filter(c => c.department === 'IT / Engineering').length;
     const mutualAlumniCount = rankedCandidates.filter(c => c.isMutual || c.isAlumni).length;
+    const femaleCount = rankedCandidates.filter(c => c.gender === 'female').length;
+    const maleCount = rankedCandidates.filter(c => c.gender === 'male').length;
     const alreadyConnectedCount = rankedCandidates.filter(c => c.isAlreadyConnected).length;
     const pendingCount = rankedCandidates.filter(c => c.isPending).length;
 
-    this.log(`✓ Analysis Complete for ${companyName}: ${rawCandidates.length} discovered | ${rankedCandidates.length} relevant (${mutualAlumniCount} Mutuals/Alumni, ${hrCount} HR/Talent, ${itCount} IT/Tech)`);
+    let filterMsg = '';
+    if (this.currentCampaign.locationFilter) {
+      filterMsg += ` [Location: ${this.currentCampaign.locationFilter}]`;
+    }
+    if (this.currentCampaign.genderFilter && this.currentCampaign.genderFilter !== 'all') {
+      filterMsg += ` [Gender: ${this.currentCampaign.genderFilter.toUpperCase()}]`;
+    }
+
+    this.log(`✓ Analysis Complete for ${companyName}: ${rawCandidates.length} discovered | ${rankedCandidates.length} relevant (${mutualAlumniCount} Mutuals/Alumni, ${hrCount} HR/Talent, ${itCount} IT/Tech, ${femaleCount} Female, ${maleCount} Male)${filterMsg}`);
 
     // Target Company Verification Card state
     const companySummary = {
@@ -200,6 +228,10 @@ class WorkflowCoordinator {
       mutualAlumniCandidates: mutualAlumniCount,
       hrCandidates: hrCount,
       itCandidates: itCount,
+      femaleCandidates: femaleCount,
+      maleCandidates: maleCount,
+      locationFilter: this.currentCampaign.locationFilter || null,
+      genderFilter: this.currentCampaign.genderFilter || 'all',
       alreadyConnected: alreadyConnectedCount,
       pending: pendingCount,
       recommendedTargets: Math.min(rankedCandidates.filter(c => !c.isAlreadyConnected && !c.isPending).length, this.safety.maxRequestsPerCompany)
@@ -268,7 +300,11 @@ class WorkflowCoordinator {
 
       // 4b. Profile validation
       this.log(`Verifying current employment on profile...`);
-      const verification = await this.verificationAgent.verifyCandidateProfile(candidate, companyName);
+      const verification = await this.verificationAgent.verifyCandidateProfile(
+        candidate,
+        companyName,
+        this.currentCampaign.locationFilter
+      );
 
       if (!verification.isValid) {
         if (!this.currentCampaign.approvalMode) {

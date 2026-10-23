@@ -43,10 +43,21 @@ function getDefaultChromePath() {
   return '/usr/bin/google-chrome';
 }
 
+function getDefaultUserAgent() {
+  if (process.platform === 'win32') {
+    return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+  }
+  if (process.platform === 'darwin') {
+    return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+  }
+  return 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+}
+
 class BrowserController {
   constructor(options = {}) {
     this.userDataDir = options.userDataDir || path.join(__dirname, '..', 'data', 'chrome_profile');
     this.executablePath = options.executablePath || getDefaultChromePath();
+    this.userAgent = options.userAgent || getDefaultUserAgent();
     this.headless = options.headless !== undefined ? options.headless : false; // Default to visible for easy login and safety
     this.context = null;
     this.page = null;
@@ -126,7 +137,7 @@ class BrowserController {
         executablePath: this.executablePath,
         headless: this.headless,
         viewport: { width: 1280, height: 850 },
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        userAgent: this.userAgent,
         args: launchArgs
       });
 

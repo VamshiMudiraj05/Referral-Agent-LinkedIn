@@ -3,7 +3,8 @@ dist/
 .DS_Store
 *.log
 data/chrome_profile/
-data/history.json
+data/*.json
+!data/.gitkeep
 scratch/
 test_data/
 *.png

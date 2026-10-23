@@ -1,3 +1,6 @@
+const LocationMatcher = require('./LocationMatcher');
+const GenderDetector = require('./GenderDetector');
+
 class PeopleDiscoveryAgent {
   constructor(browserController, safetyController, logger = console.log) {
     this.browser = browserController;
@@ -5,7 +8,7 @@ class PeopleDiscoveryAgent {
     this.logger = logger;
   }
 
-  async discoverPeople(companyUrl, targetKeywords = ['Talent Acquisition', 'Recruiter', 'Software Engineer', 'QA Engineer', 'Alumni'], maxCandidates = 80) {
+  async discoverPeople(companyUrl, targetKeywords = ['Talent Acquisition', 'Recruiter', 'Software Engineer', 'QA Engineer', 'Alumni'], maxCandidates = 80, locationFilter = '') {
     const page = this.browser.page;
     if (!page) throw new Error('Browser page not available');
 
@@ -45,7 +48,11 @@ class PeopleDiscoveryAgent {
 
     // Strategy B: If we need more specific candidates (e.g. Recruiters or Engineers), use the People search input
     if (allDiscovered.size < 15) {
-      for (const kw of targetKeywords) {
+      const activeKeywords = locationFilter && locationFilter.trim()
+        ? [locationFilter.trim(), ...targetKeywords]
+        : targetKeywords;
+
+      for (const kw of activeKeywords) {
         if (allDiscovered.size >= maxCandidates) break;
         try {
           this.logger(`Applying People filter keyword: "${kw}"`);
@@ -152,6 +159,10 @@ class PeopleDiscoveryAgent {
             const badgeEl = card.querySelector('.member-insights__insight, .insight-text, .artdeco-entity-lockup__badge');
             const subline = badgeEl ? badgeEl.innerText.trim() : '';
 
+            // Location element if present on People card
+            const locEl = card.querySelector('.org-people-profile-card__profile-location, .artdeco-entity-lockup__caption, .entity-result__secondary-subtitle, div[class*="location"]');
+            const rawLocation = locEl ? locEl.innerText.trim() : '';
+
             // Avatar image
             const imgEl = card.querySelector('img[src*="media.licdn.com"], img');
             const avatar = imgEl ? imgEl.getAttribute('src') : '';
@@ -168,7 +179,8 @@ class PeopleDiscoveryAgent {
               isMutual,
               isAlumni,
               subline,
-              cardText: cardText.substring(0, 200),
+              rawLocation,
+              cardText: cardText.substring(0, 300),
               degree: degreeMatch?.[1] || 'unknown'
             });
           } catch (e) {
@@ -181,7 +193,15 @@ class PeopleDiscoveryAgent {
 
       for (const item of extracted) {
         if (!map.has(item.profileUrl)) {
-          map.set(item.profileUrl, item);
+          const loc = LocationMatcher.extractLocationFromCard(item.cardText, item.rawLocation);
+          const genderInfo = GenderDetector.detectGender(item);
+          map.set(item.profileUrl, {
+            ...item,
+            location: loc,
+            gender: genderInfo.gender,
+            pronouns: genderInfo.pronouns,
+            genderConfidence: genderInfo.confidence
+          });
         }
       }
 

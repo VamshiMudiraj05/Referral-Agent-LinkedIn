@@ -97,7 +97,7 @@ app.get('/api/history/csv', (req, res) => {
 
 app.post('/api/campaign/start', async (req, res) => {
   try {
-    const { companyName, companies, referralMessage, strategy, maxPerCompany, maxSession, approvalMode, headless } = req.body;
+    const { companyName, companies, referralMessage, strategy, maxPerCompany, maxSession, approvalMode, headless, locationFilter, genderFilter } = req.body;
     
     if (!companyName && (!companies || companies.length === 0)) {
       return res.status(400).json({ error: 'Company Name is required' });
@@ -112,6 +112,8 @@ app.post('/api/campaign/start', async (req, res) => {
       companies: companies && companies.length > 0 ? companies : [companyName],
       referralMessage,
       strategy: strategy || 'sales_then_it',
+      locationFilter: locationFilter || '',
+      genderFilter: genderFilter || 'all',
       maxPerCompany: maxPerCompany || 10,
       maxSession: maxSession || 20,
       approvalMode: approvalMode !== false,
