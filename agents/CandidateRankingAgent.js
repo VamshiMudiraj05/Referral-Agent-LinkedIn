@@ -42,7 +42,21 @@ class CandidateRankingAgent {
       'art director', 'medical', 'nurse', 'manufacturing'
     ];
 
-    this.internKeywords = ['trainee', 'student'];
+    // Restricted intern and trainee keywords
+    this.internKeywords = [
+      'intern', 'internship', 'trainee', 'student', 'apprentice', 'apprenticeship',
+      'fellow', 'fellowship', 'co-op', 'coop', 'fresher', 'graduate trainee',
+      'management trainee', 'undergraduate', 'aspiring developer', 'aspiring engineer'
+    ];
+  }
+
+  isInternOrTrainee(text = '') {
+    if (!text) return false;
+    const clean = text.toLowerCase();
+    // Strip out 'ex-' or 'former' clauses like 'ex-intern', 'ex-sde intern', 'former intern'
+    const withoutEx = clean.replace(/\b(ex|former)[- ]+([a-z0-9]+[- ]+)?(intern|internship|trainee|student|fellow|apprentice)s?\b/gi, '');
+    const internPattern = /\b(interns?|internships?|trainees?|students?|apprentices?(?:ship)?|co-?ops?|freshers?|undergrads?(?:uate)?|aspiring)\b/i;
+    return internPattern.test(withoutEx);
   }
 
   setStrategy(strategy) {
@@ -57,25 +71,15 @@ class CandidateRankingAgent {
     this.genderFilter = (gender || 'all').toLowerCase().trim();
   }
 
-  isExcluded(title = '') {
+  isExcluded(title = '', extraContext = '') {
     const lower = title.toLowerCase();
 
-    // Check if it's purely a trainee/student
-    if (this.internKeywords.some(k => lower.includes(k)) && !lower.includes('engineer') && !lower.includes('developer')) {
-      return { excluded: true, reason: 'Non-technical trainee' };
+    // 1. Strictly exclude any intern, trainee, student, or apprentice role
+    if (this.isInternOrTrainee(title) || (extraContext && this.isInternOrTrainee(extraContext))) {
+      return { excluded: true, isInternOrTrainee: true, reason: 'Intern / Trainee / Student role restricted' };
     }
 
-    // Check if it's an excluded role (Sales, Finance, Marketing, Legal, etc.)
-    const isHrOrTech = this.hrKeywords.some(k => lower.includes(k)) || 
-                       this.techKeywords.some(k => lower.includes(k)) ||
-                       lower.includes('engineer') || lower.includes('developer') || lower.includes('recruiter') ||
-                       lower.includes('qa') || lower.includes('test') || lower.includes('architect');
-
-    if (!isHrOrTech) {
-      return { excluded: true, reason: 'Not an HR/Talent or IT/Engineering role' };
-    }
-
-    // Explicitly exclude pure sales/marketing even if title has ambiguous terms
+    // 2. Check if it's an excluded department (Sales, Finance, Marketing, Legal, etc.)
     for (const kw of this.excludedKeywords) {
       if (lower.includes(kw)) {
         // Exception: if it's "Technical Recruiter" or "Sales Recruiter", it's still a recruiter!
@@ -85,6 +89,16 @@ class CandidateRankingAgent {
         }
         return { excluded: true, reason: `Excluded department: ${kw}` };
       }
+    }
+
+    // 3. Must be an HR/Talent or IT/Engineering role
+    const isHrOrTech = this.hrKeywords.some(k => lower.includes(k)) || 
+                       this.techKeywords.some(k => lower.includes(k)) ||
+                       lower.includes('engineer') || lower.includes('developer') || lower.includes('recruiter') ||
+                       lower.includes('qa') || lower.includes('test') || lower.includes('architect');
+
+    if (!isHrOrTech) {
+      return { excluded: true, reason: 'Not an HR/Talent or IT/Engineering role' };
     }
 
     return { excluded: false };
@@ -129,6 +143,25 @@ class CandidateRankingAgent {
   scoreCandidate(candidate) {
     const title = candidate.jobTitle || candidate.headline || '';
     const combinedText = `${candidate.personName} ${candidate.headline} ${candidate.jobTitle} ${candidate.subline || ''} ${candidate.cardText || ''}`.toLowerCase();
+    
+    // Check exclusion (passing title and headline/subline context)
+    const exclusionCheck = this.isExcluded(title, candidate.headline || candidate.subline || '');
+
+    // Interns / Trainees / Students are STRICTLY restricted and NEVER bypassed by alumni status
+    if (exclusionCheck.isInternOrTrainee) {
+      return {
+        ...candidate,
+        department: 'Excluded',
+        score: 0,
+        isExcluded: true,
+        exclusionReason: exclusionCheck.reason,
+        seniorityLevel: 'N/A',
+        isMutual: false,
+        isAlumni: false,
+        breakdown: { department: 0, seniority: 0, connection: 0, mutual: 0, alumni: 0 }
+      };
+    }
+
     const isAlumni = candidate.isAlumni ||
       combinedText.includes('school') ||
       combinedText.includes('college') ||
@@ -136,7 +169,6 @@ class CandidateRankingAgent {
       combinedText.includes('university') ||
       combinedText.includes('studied at') ||
       combinedText.includes('hired here');
-    const exclusionCheck = this.isExcluded(title);
 
     if (exclusionCheck.excluded && !isAlumni) {
       return {
@@ -154,9 +186,16 @@ class CandidateRankingAgent {
 
     const dept = this.classifyDepartment(title);
     let deptScore = 0;
-    if (dept === 'HR / Talent') deptScore = 50;
-    else if (dept === 'IT / Engineering') deptScore = 45;
-    else deptScore = 20;
+    if (this.strategy === 'hr_first') {
+      if (dept === 'HR / Talent') deptScore = 50;
+      else if (dept === 'IT / Engineering') deptScore = 45;
+      else deptScore = 20;
+    } else {
+      // Tech-first prioritization for 'mutuals_alumni_first', 'it_first', and default
+      if (dept === 'IT / Engineering') deptScore = 50;
+      else if (dept === 'HR / Talent') deptScore = 40;
+      else deptScore = 20;
+    }
 
     const seniority = this.calculateSeniorityScore(title);
     const seniorityScore = seniority.score;
@@ -262,7 +301,7 @@ class CandidateRankingAgent {
     // 1. Score each candidate
     const scored = candidates.map(c => this.scoreCandidate(c));
 
-    // 2. Filter out non-HR and non-IT candidates
+    // 2. Filter out non-HR and non-IT candidates (and all excluded candidates)
     const valid = scored.filter(c => !c.isExcluded
       && (c.department === 'HR / Talent' || c.department === 'IT / Engineering' || c.isAlumni));
 
@@ -301,30 +340,32 @@ class CandidateRankingAgent {
 
     const nonMutualsAlumni = annotated.filter(c => !c.isMutual && !c.isAlumni);
 
-    const hrCandidates = nonMutualsAlumni.filter(c => c.department === 'HR / Talent')
+    const itCandidates = nonMutualsAlumni.filter(c => c.department === 'IT / Engineering')
       .sort((a, b) => b.score - a.score);
 
-    const itCandidates = nonMutualsAlumni.filter(c => c.department === 'IT / Engineering')
+    const hrCandidates = nonMutualsAlumni.filter(c => c.department === 'HR / Talent')
       .sort((a, b) => b.score - a.score);
 
     let sorted = [];
 
     if (this.strategy === 'hr_first') {
-      // HR first, then IT, with mutuals/alumni boosted within their departments
+      // HR first, then IT
       const allHr = annotated.filter(c => c.department === 'HR / Talent').sort((a, b) => b.score - a.score);
       const allIt = annotated.filter(c => c.department === 'IT / Engineering').sort((a, b) => b.score - a.score);
       sorted = [...allHr, ...allIt];
     } else if (this.strategy === 'it_first') {
-      // IT first, then HR
+      // Engineering & Tech first, then HR
       const allIt = annotated.filter(c => c.department === 'IT / Engineering').sort((a, b) => b.score - a.score);
       const allHr = annotated.filter(c => c.department === 'HR / Talent').sort((a, b) => b.score - a.score);
       sorted = [...allIt, ...allHr];
     } else {
-      // Default: 'mutuals_alumni_first'
-      // 1. ALL Mutuals & Alumni (HR + IT) first!
-      // 2. HR / Talent Acquisition
-      // 3. IT / Software Engineering
-      sorted = [...mutualsAndAlumni, ...hrCandidates, ...itCandidates];
+      // User requirement: Mutuals -> Tech people -> Last HR (default and 'mutuals_alumni_first')
+      const techMutuals = mutualsAndAlumni.filter(c => c.department === 'IT / Engineering');
+      const otherMutuals = mutualsAndAlumni.filter(c => c.department !== 'IT / Engineering' && c.department !== 'HR / Talent');
+      const hrMutuals = mutualsAndAlumni.filter(c => c.department === 'HR / Talent');
+
+      const sortedMutuals = [...techMutuals, ...otherMutuals, ...hrMutuals];
+      sorted = [...sortedMutuals, ...itCandidates, ...hrCandidates];
     }
 
     // Attach priority index

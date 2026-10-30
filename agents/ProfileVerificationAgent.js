@@ -122,6 +122,16 @@ class ProfileVerificationAgent {
         targetCompany: targetCompanyName
       });
 
+      // Reject active intern, trainee, or student roles during profile verification
+      const titleToCheck = `${verificationResult.verifiedTitle || ''} ${verificationResult.headline || ''} ${candidate.jobTitle || ''}`.toLowerCase();
+      const withoutEx = titleToCheck.replace(/\b(ex|former)[- ]+([a-z0-9]+[- ]+)?(intern|internship|trainee|student|fellow|apprentice)s?\b/gi, '');
+      const internPattern = /\b(interns?|internships?|trainees?|students?|apprentices?(?:ship)?|co-?ops?|freshers?|undergrads?(?:uate)?|aspiring)\b/i;
+      if (internPattern.test(withoutEx)) {
+        const reason = `Profile indicates an active intern, trainee, or student role ("${verificationResult.verifiedTitle || verificationResult.headline}")`;
+        this.logger(`Refusing outreach: ${reason}`, 'warning');
+        return { isValid: false, reason, candidate };
+      }
+
       if (discoveredOnCompanyPeoplePage) {
         if (locationFilter && locationFilter.trim()) {
           const profileLoc = verificationResult.verifiedLocation || candidate.location || '';

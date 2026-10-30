@@ -47,6 +47,19 @@ const financeRole = rankingAgent.scoreCandidate({ personName: 'Alice Finance', j
 assert.strictEqual(financeRole.isExcluded, true);
 console.log('✓ Excluded finance role:', financeRole.jobTitle);
 
+// Test Strict Intern & Trainee Restrictions
+const sweIntern = rankingAgent.scoreCandidate({ personName: 'Ivy Intern', jobTitle: 'Software Engineering Intern' });
+assert.strictEqual(sweIntern.isExcluded, true, 'Software Engineering Intern must be excluded');
+console.log('✓ Excluded technical intern role:', sweIntern.jobTitle);
+
+const getTrainee = rankingAgent.scoreCandidate({ personName: 'Gary Trainee', jobTitle: 'Graduate Engineer Trainee', cardText: 'studied at University' });
+assert.strictEqual(getTrainee.isExcluded, true, 'Graduate Engineer Trainee must be excluded even if university text is present');
+console.log('✓ Excluded engineering trainee role:', getTrainee.jobTitle);
+
+const studentRole = rankingAgent.scoreCandidate({ personName: 'Sam Student', jobTitle: 'Student at JNTU College | Aspiring Developer' });
+assert.strictEqual(studentRole.isExcluded, true, 'Student / aspiring developer must be excluded');
+console.log('✓ Excluded student role:', studentRole.jobTitle);
+
 // Test HR / Talent Acquisition
 const hrRecruiter = rankingAgent.scoreCandidate({ personName: 'Sarah Recruiter', jobTitle: 'Senior Technical Recruiter' });
 assert.strictEqual(hrRecruiter.isExcluded, false);

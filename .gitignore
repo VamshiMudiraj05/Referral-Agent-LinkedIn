@@ -8,3 +8,5 @@ data/*.json
 scratch/
 test_data/
 *.png
+!docs/screenshots/*.png
+!frontend/src/assets/*.png

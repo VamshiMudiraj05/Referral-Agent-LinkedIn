@@ -115,6 +115,14 @@ class OutreachAgent {
       await page.waitForLoadState('domcontentloaded').catch(() => {});
       await page.waitForTimeout(1500);
 
+      // Minimize or close any open floating messaging bubbles that could intercept clicks or steal focus
+      if (typeof page.evaluate === 'function') {
+        await page.evaluate(() => {
+        const closeBtns = document.querySelectorAll('aside.msg-overlay-container button[data-control-name="overlay.close_conversation_window"], aside.msg-overlay-container .msg-overlay-bubble-header__control--close');
+        closeBtns.forEach(btn => btn.click());
+      }).catch(() => {});
+      }
+
       // Check if already pending invitation on LinkedIn
       const pendingBtn = page.locator('main button:has-text("Pending"), main [aria-label*="Pending" i], main :is(a, button):has-text("Pending")').first();
       if (await pendingBtn.isVisible({ timeout: 800 }).catch(() => false)) {
@@ -216,13 +224,16 @@ class OutreachAgent {
       // STEP 3: Handle the Connection Modal Dialog ("Add a note to your invitation?")
       // =========================================================================
       this.logger('Waiting for invitation modal dialog...');
-      await page.waitForTimeout(1500);
+      
+      // Wait for modal dialog container
+      const modalContainer = page.locator('div.artdeco-modal[role="dialog"], #send-invite-modal, div[data-test-modal]').first();
+      await modalContainer.waitFor({ state: 'visible', timeout: 4000 }).catch(() => {});
 
       // Check if email verification is requested
-      const emailInput = page.locator('div[role="dialog"] input#email, input[name="email"]').first();
+      const emailInput = page.locator('div.artdeco-modal input#email, div[role="dialog"]:not(.msg-overlay-conversation-bubble) input#email, input[name="email"]').first();
       if (await emailInput.isVisible({ timeout: 1000 }).catch(() => false)) {
         this.logger(`Candidate requires email verification to connect. Skipping ${candidate.personName}.`, 'warning');
-        const dismissBtn = page.locator('div[role="dialog"] button[aria-label="Dismiss"], button.artdeco-modal__dismiss').first();
+        const dismissBtn = page.locator('div.artdeco-modal button[aria-label="Dismiss"], div.artdeco-modal button.artdeco-modal__dismiss, button.artdeco-modal__dismiss').first();
         if (await dismissBtn.isVisible().catch(() => false)) {
           await dismissBtn.click().catch(() => {});
         }
@@ -242,41 +253,50 @@ class OutreachAgent {
         return { success: false, status: 'Skipped', reason: 'Recipient requires email verification' };
       }
 
-      // Look for "Add a note" button in the invitation flow
-      const addNoteBtn = page.getByRole('button', { name: /add a note/i }).first();
-      const addNoteVisible = await addNoteBtn.isVisible({ timeout: 3500 }).catch(() => false);
+      // Look for "Add a note" button in the invitation modal
+      const addNoteSelectors = [
+        'div.artdeco-modal button[aria-label*="add a note" i]',
+        'div.artdeco-modal button:has-text("Add a note")',
+        'div[role="dialog"]:not(.msg-overlay-conversation-bubble) button[aria-label*="add a note" i]',
+        'div[role="dialog"]:not(.msg-overlay-conversation-bubble) button:has-text("Add a note")',
+        'button[aria-label*="add a note" i]',
+        'button:has-text("Add a note")'
+      ];
+      const addNoteBtn = await findVisibleLocator(page, addNoteSelectors, 2000);
 
-      if (addNoteVisible) {
+      if (addNoteBtn) {
         this.logger('Found "Add a note" button. Clicking to open note textarea...');
-        await addNoteBtn.click();
-        await page.waitForTimeout(400);
+        await addNoteBtn.click({ timeout: 3000 }).catch(() => {});
+        // Explicitly wait for textarea in modal to become visible after clicking Add a note
+        await page.locator('div.artdeco-modal textarea, div[role="dialog"] textarea, textarea').first().waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       } else {
         this.logger('Note textarea might already be visible or in direct composition view.');
       }
 
       // =========================================================================
-      // STEP 4: Fill the note textarea
+      // STEP 4: Fill the note textarea (Strictly scoped to modal textarea, excluding chat dock!)
       // =========================================================================
       const noteFieldSelectors = [
-        '[role="dialog"] textarea',
-        '[role="dialog"] [contenteditable="true"][role="textbox"]',
-        '[role="dialog"] [contenteditable="true"]',
+        'div.artdeco-modal textarea#custom-message',
+        'div.artdeco-modal textarea[name="message"]',
+        'div.artdeco-modal textarea',
+        '#send-invite-modal textarea',
+        'div[role="dialog"]:not(.msg-overlay-conversation-bubble):not(.msg-overlay-container) textarea',
+        'textarea#custom-message',
+        'textarea[name="message"]',
         'textarea[aria-label*="note" i]',
         'textarea[placeholder*="note" i]',
-        'textarea[name*="message" i]',
-        'textarea',
-        '[contenteditable="true"][role="textbox"]',
-        '[contenteditable="true"]'
+        'textarea'
       ];
       let noteField = null;
-      for (let attempt = 0; attempt < 6 && !noteField; attempt++) {
-        noteField = await findVisibleLocator(page, noteFieldSelectors, 500);
-        if (!noteField && attempt < 5) await page.waitForTimeout(500);
+      for (let attempt = 0; attempt < 8 && !noteField; attempt++) {
+        noteField = await findVisibleLocator(page, noteFieldSelectors, 600);
+        if (!noteField && attempt < 7) await page.waitForTimeout(500);
       }
 
       if (!noteField) {
         this.logger(`LinkedIn's invitation note field was not accessible for ${candidate.personName}. No request was sent.`, 'warning');
-        const dismissBtn = page.locator('div[role="dialog"] button[aria-label="Dismiss"], button:has-text("Cancel")').first();
+        const dismissBtn = page.locator('div.artdeco-modal button[aria-label="Dismiss"], div.artdeco-modal button:has-text("Cancel"), button[aria-label="Dismiss"]').first();
         if (await dismissBtn.isVisible().catch(() => false)) {
           await dismissBtn.click().catch(() => {});
         }
@@ -298,24 +318,51 @@ class OutreachAgent {
       }
 
       this.logger(`Typing referral message into note textarea (${msgObj.charCount}/300 chars)...`);
-      await noteField.click();
+      // Focus/click note field safely without viewport scroll hang
+      await noteField.click({ timeout: 2500 }).catch(async () => {
+        await noteField.focus().catch(() => {});
+      });
       await page.waitForTimeout(200);
-      await noteField.fill(msgObj.message);
-      await page.waitForTimeout(800);
+      await noteField.fill(msgObj.message).catch(async () => {
+        await noteField.evaluate((el, text) => {
+          el.focus();
+          el.value = text;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }, msgObj.message);
+      });
+      await page.waitForTimeout(400);
 
-      // =========================================================================
-      // STEP 5: Click "Send" button (ensure NOT "Send without a note")
-      // =========================================================================
-      const filledNote = await noteField.evaluate(element =>
+      // Verify the note was populated; if not, force set via evaluate
+      let filledNote = await noteField.evaluate(element =>
         (element.value ?? element.innerText ?? element.textContent ?? '').trim()
       );
+      if (filledNote !== msgObj.message) {
+        await noteField.evaluate((el, text) => {
+          el.focus();
+          el.value = text;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }, msgObj.message);
+        await page.waitForTimeout(300);
+        filledNote = await noteField.evaluate(element =>
+          (element.value ?? element.innerText ?? element.textContent ?? '').trim()
+        );
+      }
+
       if (filledNote !== msgObj.message || filledNote.length === 0 || filledNote.length > 300) {
         throw new Error('Invitation note did not match the prepared message or exceeded LinkedIn’s 300 character limit');
       }
 
+      // =========================================================================
+      // STEP 5: Click "Send" button (Strictly scoped to modal, not chat dock!)
+      // =========================================================================
       const sendLocators = [
-        page.getByRole('button', { name: /^send$/i }),
-        page.getByRole('button', { name: /^send invitation$/i })
+        page.locator('div.artdeco-modal button[aria-label*="Send invitation" i], div.artdeco-modal button:has-text("Send invitation")').first(),
+        page.locator('div.artdeco-modal button[aria-label*="Send" i], div.artdeco-modal button:has-text("Send")').first(),
+        page.locator('div[role="dialog"]:not(.msg-overlay-conversation-bubble):not(.msg-overlay-container) button:has-text("Send")').first(),
+        page.getByRole('button', { name: /^send invitation$/i }).first(),
+        page.getByRole('button', { name: /^send$/i }).first()
       ];
 
       let sent = false;

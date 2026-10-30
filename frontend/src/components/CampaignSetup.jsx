@@ -305,7 +305,7 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
                 {
                   id: 'mutuals_alumni_first',
                   title: 'Mutuals & Alumni First',
-                  desc: 'Highest referral response (shared connections & college)'
+                  desc: 'Mutuals & Alumni first, then Tech Engineers, then HR last'
                 },
                 {
                   id: 'hr_first',

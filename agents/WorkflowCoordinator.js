@@ -183,9 +183,13 @@ class WorkflowCoordinator {
 
     // 2. Discover People from the People tab
     this.log(`Step 2: Accessing official People section...`);
+    const discoveryKeywords = (this.currentCampaign.strategy === 'hr_first')
+      ? ['Talent Acquisition', 'Recruiter', 'Software Engineer', 'Alumni']
+      : ['Software Engineer', 'Developer', 'Engineering Manager', 'Tech Lead', 'Talent Acquisition', 'Recruiter', 'Alumni'];
+
     const rawCandidates = await this.peopleAgent.discoverPeople(
       officialCompany.officialUrl,
-      undefined,
+      discoveryKeywords,
       80,
       this.currentCampaign.locationFilter
     );
@@ -195,7 +199,7 @@ class WorkflowCoordinator {
     }));
 
     // 3. Score and rank candidates
-    this.log(`Step 3: Ranking candidates (Top Priority: Mutual Connections & Same College Alumni, then HR/Talent & IT/Engineering)...`);
+    this.log(`Step 3: Ranking candidates (Priority: Mutuals -> Tech Engineers -> Last HR / Talent Partners)...`);
     const rankedCandidates = this.rankingAgent.rankCandidates(candidatesWithCompanyEvidence, this.history, companyName);
 
     const hrCount = rankedCandidates.filter(c => c.department === 'HR / Talent').length;
