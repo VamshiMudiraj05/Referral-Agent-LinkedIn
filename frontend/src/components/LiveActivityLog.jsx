@@ -62,7 +62,7 @@ export default function LiveActivityLog({ logs = [], onClear }) {
   };
 
   return (
-    <div className="terminal-window">
+    <div className="terminal-window scroll-reveal">
       {/* Terminal Title Bar */}
       <div className="terminal-header">
         <div className="terminal-dots">

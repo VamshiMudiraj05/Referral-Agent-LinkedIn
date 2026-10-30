@@ -265,25 +265,16 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
           {sorted.map((c, idx) => (
             <div
               key={c.profileUrl || idx}
+              className="scroll-reveal hover-lift"
               style={{
+                transitionDelay: `${(idx % 6) * 0.07}s`,
                 padding: '18px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 backgroundColor: 'var(--surface-secondary)',
                 borderRadius: 'var(--radius-card-sm)',
-                border: '1px solid var(--border-divider)',
-                transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--text-primary)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 18px rgba(18, 16, 14, 0.08)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-divider)';
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.boxShadow = 'none';
+                border: '1px solid var(--border-divider)'
               }}
             >
               {/* Card Top: Avatar, Name, Title, Badges */}

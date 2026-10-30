@@ -154,7 +154,7 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
 
         <form onSubmit={handleStart}>
           {/* SECTION 1: TARGET COMPANY */}
-          <div style={{ marginBottom: '28px' }}>
+          <div className="scroll-reveal" style={{ marginBottom: '28px' }}>
             <span className="section-tag">[ 01 ] // TARGET COMPANY</span>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '7px' }}>
@@ -243,7 +243,7 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
           </div>
 
           {/* SECTION 2: REFERRAL MESSAGE */}
-          <div style={{ marginBottom: '28px' }}>
+          <div className="scroll-reveal" style={{ marginBottom: '28px' }}>
             <span className="section-tag">[ 02 ] // CONNECTION REQUEST NOTE</span>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '7px' }}>
@@ -300,7 +300,7 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
           </div>
 
           {/* SECTION 3: TARGETING STRATEGY */}
-          <div style={{ marginBottom: '28px' }}>
+          <div className="scroll-reveal" style={{ marginBottom: '28px' }}>
             <span className="section-tag">[ 03 ] // TARGET GROUP PRIORITY</span>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '7px' }}>
@@ -336,12 +336,13 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
                   tag: 'PEER DEV',
                   desc: 'Software Engineers, Architects & Tech Leads'
                 }
-              ].map(item => {
+              ].map((item, idx) => {
                 const isSelected = strategy === item.id;
                 return (
                   <div
                     key={item.id}
                     onClick={() => setStrategy(item.id)}
+                    className={`scroll-reveal stagger-${idx + 1} hover-lift`}
                     style={{
                       padding: '16px',
                       borderRadius: 'var(--radius-card-sm)',
@@ -405,7 +406,7 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
           </div>
 
           {/* SECTION 4: CANDIDATE FILTERS */}
-          <div style={{ marginBottom: '28px' }}>
+          <div className="scroll-reveal" style={{ marginBottom: '28px' }}>
             <span className="section-tag">[ 04 ] // CANDIDATE FILTERS</span>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
               <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '7px' }}>
@@ -531,14 +532,14 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
           </div>
 
           {/* SECTION 5: CONNECTION LIMITS & APPROVAL MODE */}
-          <div style={{
+          <div className="scroll-reveal" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '14px',
             marginBottom: '28px'
           }}>
             {/* Limit Selector */}
-            <div style={{
+            <div className="hover-lift" style={{
               padding: '18px',
               borderRadius: 'var(--radius-card-sm)',
               border: '1px solid var(--border-divider)',
@@ -642,7 +643,7 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
             </div>
 
             {/* Human Approval Mode */}
-            <div style={{
+            <div className="hover-lift" style={{
               padding: '18px',
               borderRadius: 'var(--radius-card-sm)',
               border: '1px solid var(--border-divider)',
@@ -720,7 +721,7 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
           </div>
 
           {/* SECTION 6: BROWSER WINDOW SETTINGS */}
-          <div style={{ marginBottom: '28px' }}>
+          <div className="scroll-reveal" style={{ marginBottom: '28px' }}>
             <span className="section-tag">[ 06 ] // RUNTIME OPTIONS</span>
             <div>
               <button
@@ -770,7 +771,7 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
           </div>
 
           {/* SECTION 7: CAMPAIGN ACTIONS */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', paddingTop: '22px', borderTop: '1px solid var(--border-divider)' }}>
+          <div className="scroll-reveal" style={{ display: 'flex', gap: '12px', alignItems: 'center', paddingTop: '22px', borderTop: '1px solid var(--border-divider)' }}>
             <button
               type="submit"
               disabled={isRunning || isOverLimit}
@@ -805,7 +806,7 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
       {/* Right-Side Information & Live Preview Panel */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {/* Dynamic Outreach Note Preview Card */}
-        <div className="card" style={{ padding: '22px', backgroundColor: 'var(--surface-main)' }}>
+        <div className="card scroll-reveal stagger-1 hover-lift" style={{ padding: '22px', backgroundColor: 'var(--surface-main)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <span className="section-tag" style={{ margin: 0 }}>
               [ LIVE NOTE PREVIEW ]
@@ -837,7 +838,7 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
         </div>
 
         {/* Campaign Configuration Snapshot */}
-        <div className="card" style={{ padding: '22px', backgroundColor: 'var(--surface-main)' }}>
+        <div className="card scroll-reveal stagger-2 hover-lift" style={{ padding: '22px', backgroundColor: 'var(--surface-main)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <span className="section-tag" style={{ margin: 0 }}>
               [ CAMPAIGN MANIFEST ]
@@ -886,7 +887,7 @@ export default function CampaignSetup({ onStartCampaign, isRunning, recentCompan
         </div>
 
         {/* Safety & Compliance Assurance */}
-        <div className="card" style={{ padding: '18px 20px', backgroundColor: 'var(--surface-main)' }}>
+        <div className="card scroll-reveal stagger-3 hover-lift" style={{ padding: '18px 20px', backgroundColor: 'var(--surface-main)' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
             <div style={{
               width: '32px',

@@ -19,7 +19,7 @@ export default function CompanyVerification({ companySummary, onDecision }) {
   if (!companySummary) return null;
 
   return (
-    <div className="card" style={{ padding: '28px', marginBottom: '22px', backgroundColor: 'var(--surface-main)' }}>
+    <div className="card scroll-reveal hover-lift" style={{ padding: '28px', marginBottom: '22px', backgroundColor: 'var(--surface-main)' }}>
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '14px' }}>
         <div>

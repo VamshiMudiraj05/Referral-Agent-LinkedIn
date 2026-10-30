@@ -788,9 +788,20 @@ body {
   background: #4B453D;
 }
 
-/* Smooth theme transition */
+/* Smooth theme transition on specific UI components */
 body,
-body *:not(script):not(style) {
+.card,
+.kpi-card,
+.btn,
+header,
+footer,
+input,
+select,
+textarea,
+nav,
+.badge,
+.terminal-window,
+.activity-feed-container {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -828,37 +839,38 @@ body *:not(script):not(style) {
 }
 
 /* ========================================
-   SCROLL REVEAL ANIMATION SYSTEM
+   SCROLL REVEAL ANIMATION SYSTEM (NoMonkey Style)
    ======================================== */
 
 /* Base hidden state for scroll-reveal elements */
 .scroll-reveal {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0 !important;
+  transform: translateY(32px) !important;
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.65s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: opacity, transform;
 }
 
 .scroll-reveal.revealed {
-  opacity: 1;
-  transform: translateY(0);
+  opacity: 1 !important;
+  transform: translateY(0) !important;
 }
 
 /* Slide-in variants */
 .scroll-reveal.slide-left {
-  transform: translateX(-30px);
+  transform: translateX(-36px) !important;
 }
 
 .scroll-reveal.slide-left.revealed {
-  transform: translateX(0);
+  transform: translateX(0) !important;
 }
 
 .scroll-reveal.slide-right {
-  transform: translateX(30px);
+  transform: translateX(36px) !important;
 }
 
 .scroll-reveal.slide-right.revealed {
-  transform: translateX(0);
+  transform: translateX(0) !important;
 }
 
 /* Scale-in (for modals) */
@@ -878,14 +890,14 @@ body *:not(script):not(style) {
 }
 
 /* Stagger delays for children */
-.stagger-1 { transition-delay: 0.05s; }
-.stagger-2 { transition-delay: 0.1s; }
-.stagger-3 { transition-delay: 0.15s; }
-.stagger-4 { transition-delay: 0.2s; }
-.stagger-5 { transition-delay: 0.25s; }
-.stagger-6 { transition-delay: 0.3s; }
-.stagger-7 { transition-delay: 0.35s; }
-.stagger-8 { transition-delay: 0.4s; }
+.scroll-reveal.stagger-1 { transition-delay: 0.08s !important; }
+.scroll-reveal.stagger-2 { transition-delay: 0.16s !important; }
+.scroll-reveal.stagger-3 { transition-delay: 0.24s !important; }
+.scroll-reveal.stagger-4 { transition-delay: 0.32s !important; }
+.scroll-reveal.stagger-5 { transition-delay: 0.40s !important; }
+.scroll-reveal.stagger-6 { transition-delay: 0.48s !important; }
+.scroll-reveal.stagger-7 { transition-delay: 0.56s !important; }
+.scroll-reveal.stagger-8 { transition-delay: 0.64s !important; }
 
 /* Tab content fade transition */
 .tab-content-enter {

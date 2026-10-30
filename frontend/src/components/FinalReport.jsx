@@ -20,7 +20,7 @@ export default function FinalReport({ report, companyName, onNewCampaign }) {
   };
 
   return (
-    <div className="card" style={{ padding: '32px', backgroundColor: 'var(--surface-main)' }}>
+    <div className="card scroll-reveal" style={{ padding: '32px', backgroundColor: 'var(--surface-main)' }}>
       {/* Report Header */}
       <div style={{
         display: 'flex',

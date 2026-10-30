@@ -28,33 +28,54 @@ import FinalReport from './components/FinalReport';
 import HistoryView from './components/HistoryView';
 import SafetyBanner from './components/SafetyBanner';
 
-// Custom hook for scroll-reveal animations
-function useScrollReveal() {
-  const ref = useRef(null);
+// Custom hook for scroll-reveal animations (NoMonkey GSAP-style)
+function useScrollReveal(dependency) {
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add('revealed');
-            observer.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.1, rootMargin: '0px 0px -30px 0px' }
+      {
+        threshold: 0.05,
+        rootMargin: '0px 0px -15px 0px'
+      }
     );
 
-    const elements = node.querySelectorAll('.scroll-reveal');
-    elements.forEach((el) => observer.observe(el));
+    const observeElements = () => {
+      const root = containerRef.current || document;
+      const elements = root.querySelectorAll('.scroll-reveal:not(.revealed)');
+      elements.forEach((el) => observer.observe(el));
+    };
 
-    return () => observer.disconnect();
-  }, []);
+    // Initial check with brief tick to let React render DOM
+    const timer = setTimeout(observeElements, 50);
 
-  return ref;
+    // Watch for tab switches and dynamic DOM updates
+    let mutationObserver = null;
+    if (containerRef.current) {
+      mutationObserver = new MutationObserver(() => {
+        observeElements();
+      });
+      mutationObserver.observe(containerRef.current, {
+        childList: true,
+        subtree: true
+      });
+    }
+
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+      if (mutationObserver) mutationObserver.disconnect();
+    };
+  }, [dependency]);
+
+  return containerRef;
 }
 
 export default function App() {
@@ -69,6 +90,20 @@ export default function App() {
     catch { return 'light'; }
   });
 
+  // Scroll progress for top indicator (No Monkey style)
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalScroll > 0) {
+        setScrollProgress(Math.min(100, Math.max(0, (window.scrollY / totalScroll) * 100)));
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Apply theme to document
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -79,8 +114,8 @@ export default function App() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   }, []);
 
-  // Scroll reveal ref for main content
-  const mainRef = useScrollReveal();
+  // Scroll reveal ref for main content, re-triggered on tab switch
+  const mainRef = useScrollReveal(activeTab);
   
   const [currentCompany, setCurrentCompany] = useState('');
   const [currentMessage, setCurrentMessage] = useState('');
@@ -334,6 +369,19 @@ export default function App() {
         top: 0,
         zIndex: 50
       }}>
+        {/* Scroll Progress Bar (NoMonkey Top Line) */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          height: '2px',
+          width: `${scrollProgress}%`,
+          backgroundColor: 'var(--accent-banana)',
+          boxShadow: '0 0 8px rgba(245, 158, 11, 0.6)',
+          transition: 'width 0.1s ease-out',
+          zIndex: 60
+        }} />
+
         <div style={{
           maxWidth: '1260px',
           margin: '0 auto',
@@ -792,7 +840,7 @@ export default function App() {
       </main>
 
       {/* Modern Minimalist Footer */}
-      <footer style={{
+      <footer className="scroll-reveal" style={{
         borderTop: '1px solid var(--border-divider)',
         backgroundColor: 'var(--surface-main)',
         padding: '16px 24px',

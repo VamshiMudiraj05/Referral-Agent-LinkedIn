@@ -80,6 +80,7 @@ export default function HistoryView({ history = [], lastCampaign = null }) {
       {lastCampaign && (
         <section
           aria-label="Last campaign details"
+          className="scroll-reveal hover-lift"
           style={{
             padding: '18px 20px',
             marginBottom: '24px',
