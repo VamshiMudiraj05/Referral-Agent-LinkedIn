@@ -75,7 +75,7 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
   };
 
   return (
-    <div className="card" style={{ padding: '26px 28px', backgroundColor: 'var(--surface-main)' }}>
+    <div className="card" style={{ padding: '28px', backgroundColor: 'var(--surface-main)' }}>
       {/* Header and Controls */}
       <div style={{
         display: 'flex',
@@ -86,12 +86,13 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
         gap: '14px'
       }}>
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Users size={20} color="var(--action-blue)" />
+          <span className="section-tag">[ DIRECTORY // {candidates.length} PROFILES DISCOVERED ]</span>
+          <h2 style={{ fontSize: '22px', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Users size={20} color="var(--text-primary)" />
             <span>Discovered Candidates</span>
             {currentCompany && (
-              <span style={{ color: 'var(--text-secondary)', fontSize: '15px', fontWeight: '400' }}>
-                at {currentCompany}
+              <span style={{ color: 'var(--text-secondary)', fontSize: '15px', fontWeight: '500', fontFamily: 'var(--font-mono)' }}>
+                @ {currentCompany}
               </span>
             )}
           </h2>
@@ -106,29 +107,30 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
           <div style={{
             display: 'flex',
             backgroundColor: 'var(--surface-secondary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-control)',
             padding: '2px',
             border: '1px solid var(--border-divider)'
           }}>
             {[
-              { id: 'ALL', label: `All (${candidates.length})` },
-              { id: 'MUTUAL_ALUMNI', label: 'Mutuals & Alumni' },
-              { id: 'HR', label: 'HR / Talent' },
-              { id: 'TECH', label: 'Engineering' }
+              { id: 'ALL', label: `ALL (${candidates.length})` },
+              { id: 'MUTUAL_ALUMNI', label: 'MUTUALS & ALUMNI' },
+              { id: 'HR', label: 'HR / TALENT' },
+              { id: 'TECH', label: 'ENGINEERING' }
             ].map(f => (
               <button
                 key={f.id}
                 onClick={() => setFilterDept(f.id)}
                 style={{
-                  background: filterDept === f.id ? 'var(--surface-main)' : 'transparent',
+                  background: filterDept === f.id ? 'var(--text-primary)' : 'transparent',
                   border: 'none',
-                  color: filterDept === f.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  color: filterDept === f.id ? '#FFFBF2' : 'var(--text-secondary)',
                   padding: '5px 11px',
                   borderRadius: '6px',
-                  fontSize: '12.5px',
-                  fontWeight: filterDept === f.id ? '600' : '500',
+                  fontSize: '11.5px',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: filterDept === f.id ? '700' : '500',
                   cursor: 'pointer',
-                  boxShadow: filterDept === f.id ? '0 1px 2px rgba(23, 25, 29, 0.05)' : 'none',
+                  boxShadow: filterDept === f.id ? '0 1px 3px rgba(18, 16, 14, 0.15)' : 'none',
                   transition: 'all 0.15s ease'
                 }}
               >
@@ -141,28 +143,29 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
           <div style={{
             display: 'flex',
             backgroundColor: 'var(--surface-secondary)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-control)',
             padding: '2px',
             border: '1px solid var(--border-divider)'
           }}>
             {[
-              { id: 'ALL', label: 'All' },
-              { id: 'FEMALE', label: '♀ Female' },
-              { id: 'MALE', label: '♂ Male' }
+              { id: 'ALL', label: 'ALL' },
+              { id: 'FEMALE', label: '♀ FEMALE' },
+              { id: 'MALE', label: '♂ MALE' }
             ].map(f => (
               <button
                 key={f.id}
                 onClick={() => setFilterGender(f.id)}
                 style={{
-                  background: filterGender === f.id ? 'var(--surface-main)' : 'transparent',
+                  background: filterGender === f.id ? 'var(--text-primary)' : 'transparent',
                   border: 'none',
-                  color: filterGender === f.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  color: filterGender === f.id ? '#FFFBF2' : 'var(--text-secondary)',
                   padding: '5px 9px',
                   borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: filterGender === f.id ? '600' : '500',
+                  fontSize: '11px',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: filterGender === f.id ? '700' : '500',
                   cursor: 'pointer',
-                  boxShadow: filterGender === f.id ? '0 1px 2px rgba(23, 25, 29, 0.05)' : 'none',
+                  boxShadow: filterGender === f.id ? '0 1px 3px rgba(18, 16, 14, 0.15)' : 'none',
                   transition: 'all 0.15s ease'
                 }}
               >
@@ -180,7 +183,8 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
               placeholder="Search name, role..."
               style={{
                 padding: '6px 12px 6px 30px',
-                fontSize: '13px',
+                fontSize: '12.5px',
+                fontFamily: 'var(--font-mono)',
                 borderRadius: '8px',
                 border: '1px solid var(--border-divider)',
                 backgroundColor: 'var(--surface-input)',
@@ -197,11 +201,11 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
             className="select-input"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            style={{ padding: '6px 12px', fontSize: '13px', width: 'auto', backgroundColor: 'var(--surface-input)' }}
+            style={{ padding: '6px 12px', fontSize: '12.5px', fontFamily: 'var(--font-mono)', width: 'auto', backgroundColor: 'var(--surface-input)' }}
           >
-            <option value="score">Sort by Relevance</option>
-            <option value="rank">Sort by Priority Rank</option>
-            <option value="name">Sort by Name</option>
+            <option value="score">Sort: Relevance</option>
+            <option value="rank">Sort: Priority Rank</option>
+            <option value="name">Sort: Name</option>
           </select>
 
           {/* View Mode Toggle */}
@@ -209,8 +213,8 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
             <button
               onClick={() => setViewMode('cards')}
               style={{
-                backgroundColor: viewMode === 'cards' ? 'var(--action-blue-subtle)' : 'var(--surface-main)',
-                color: viewMode === 'cards' ? 'var(--action-blue)' : 'var(--text-secondary)',
+                backgroundColor: viewMode === 'cards' ? 'var(--text-primary)' : 'var(--surface-main)',
+                color: viewMode === 'cards' ? '#FFFBF2' : 'var(--text-secondary)',
                 border: 'none',
                 padding: '6px 10px',
                 cursor: 'pointer',
@@ -224,8 +228,8 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
             <button
               onClick={() => setViewMode('table')}
               style={{
-                backgroundColor: viewMode === 'table' ? 'var(--action-blue-subtle)' : 'var(--surface-main)',
-                color: viewMode === 'table' ? 'var(--action-blue)' : 'var(--text-secondary)',
+                backgroundColor: viewMode === 'table' ? 'var(--text-primary)' : 'var(--surface-main)',
+                color: viewMode === 'table' ? '#FFFBF2' : 'var(--text-secondary)',
                 border: 'none',
                 borderLeft: '1px solid var(--border-divider)',
                 padding: '6px 10px',
@@ -269,7 +273,17 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
                 backgroundColor: 'var(--surface-secondary)',
                 borderRadius: 'var(--radius-card-sm)',
                 border: '1px solid var(--border-divider)',
-                transition: 'border-color 0.15s ease'
+                transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--text-primary)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 18px rgba(18, 16, 14, 0.08)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-divider)';
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             >
               {/* Card Top: Avatar, Name, Title, Badges */}
@@ -293,14 +307,14 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
                         width: '46px',
                         height: '46px',
                         borderRadius: '50%',
-                        backgroundColor: 'var(--action-blue-subtle)',
-                        color: 'var(--action-blue)',
+                        backgroundColor: 'var(--text-primary)',
+                        color: '#FFFBF2',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontWeight: '700',
                         fontSize: '16px',
-                        border: '1px solid var(--action-blue-border)'
+                        fontFamily: 'var(--font-mono)'
                       }}>
                         {c.personName ? c.personName.charAt(0) : 'U'}
                       </div>
@@ -308,11 +322,11 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
 
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                        <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>
                           {c.personName}
                         </span>
                         {c.priorityRank && (
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '500' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: '600' }}>
                             #{c.priorityRank}
                           </span>
                         )}
@@ -332,7 +346,7 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
 
                       {c.location && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                          <MapPin size={12} color="var(--action-blue)" />
+                          <MapPin size={12} color="var(--text-primary)" />
                           <span>{c.location}</span>
                         </div>
                       )}
@@ -346,12 +360,12 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', margin: '10px 0 14px' }}>
                   {getDeptBadge(c.department)}
                   {c.gender === 'female' && (
-                    <span className="badge" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-rose)', border: '1px solid var(--error-border)', fontSize: '11.5px' }}>
+                    <span className="badge" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-rose)', border: '1px solid var(--error-border)', fontSize: '11px' }}>
                       ♀ Female {c.pronouns ? `(${c.pronouns})` : ''}
                     </span>
                   )}
                   {c.gender === 'male' && (
-                    <span className="badge" style={{ backgroundColor: 'var(--action-blue-subtle)', color: 'var(--action-blue)', border: '1px solid var(--action-blue-border)', fontSize: '11.5px' }}>
+                    <span className="badge" style={{ backgroundColor: '#EEF2FF', color: '#3730A3', border: '1px solid #C7D2FE', fontSize: '11px' }}>
                       ♂ Male {c.pronouns ? `(${c.pronouns})` : ''}
                     </span>
                   )}
@@ -374,8 +388,8 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{
-                    width: '36px',
-                    height: '6px',
+                    width: '38px',
+                    height: '5px',
                     backgroundColor: 'var(--border-divider)',
                     borderRadius: '3px',
                     overflow: 'hidden'
@@ -383,11 +397,11 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
                     <div style={{
                       width: `${c.score || 0}%`,
                       height: '100%',
-                      backgroundColor: (c.score || 0) >= 80 ? 'var(--success-green)' : (c.score || 0) >= 60 ? 'var(--action-blue)' : 'var(--warning-amber)'
+                      backgroundColor: (c.score || 0) >= 80 ? 'var(--success-green)' : (c.score || 0) >= 60 ? 'var(--text-primary)' : 'var(--warning-amber)'
                     }} />
                   </div>
-                  <span style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--text-primary)' }}>
-                    {c.score || 0}% Relevant
+                  <span style={{ fontSize: '12px', fontWeight: '700', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
+                    {c.score || 0}% MATCH
                   </span>
                 </div>
 
@@ -397,10 +411,10 @@ export default function CandidateTable({ candidates = [], currentCompany }) {
                     target="_blank"
                     rel="noreferrer"
                     className="btn btn-secondary"
-                    style={{ padding: '4px 11px', fontSize: '12px', textDecoration: 'none' }}
+                    style={{ padding: '4px 10px', fontSize: '11.5px', fontFamily: 'var(--font-mono)', textDecoration: 'none' }}
                   >
-                    <span>View Profile</span>
-                    <ExternalLink size={12} />
+                    <span>PROFILE</span>
+                    <ExternalLink size={11} />
                   </a>
                 )}
               </div>

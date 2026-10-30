@@ -299,37 +299,43 @@ export default function App() {
             <div style={{
               width: '36px',
               height: '36px',
-              borderRadius: '10px',
+              borderRadius: '9px',
               backgroundColor: 'var(--text-primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#FFFFFF'
+              color: '#FFFBF2',
+              boxShadow: '0 2px 6px rgba(18, 16, 14, 0.2)'
             }}>
               <Compass size={19} strokeWidth={2.4} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '18px', fontWeight: '600', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+                <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
                   ReferPilot
                 </span>
-                <span style={{
-                  fontSize: '11px',
-                  fontWeight: '600',
+                <span className="badge" style={{
+                  fontSize: '10.5px',
+                  fontWeight: '700',
                   padding: '2px 7px',
+                  backgroundColor: 'var(--accent-banana)',
+                  color: '#12100E',
                   borderRadius: 'var(--radius-pill)',
-                  backgroundColor: 'var(--action-blue-subtle)',
-                  color: 'var(--action-blue)',
-                  border: '1px solid var(--action-blue-border)',
                   letterSpacing: '0.04em'
                 }}>
-                  AI
+                  v2.4
                 </span>
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.1, marginTop: '2px' }}>
-                Automated Referral Outreach
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.1, marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                autonomous outreach agent
               </div>
             </div>
+          </div>
+
+          {/* Terminal Status Pill */}
+          <div className="terminal-pill" style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+            <span className={`status-dot ${isRunning ? 'active' : isPaused ? 'waiting' : 'idle'}`} style={{ width: '6px', height: '6px' }} />
+            <span>$ referpilot {isRunning ? '--active' : isPaused ? '--paused' : '--idle'}</span>
           </div>
 
           {/* Navigation Segmented Controls */}

@@ -30,111 +30,152 @@ export default function LiveActivityLog({ logs = [], onClear }) {
     switch (type) {
       case 'success':
         return {
-          icon: <CheckCircle2 size={15} color="var(--success-green)" />,
-          textColor: 'var(--text-primary)'
+          icon: <CheckCircle2 size={14} color="#10B981" />,
+          textColor: '#34D399',
+          prefix: '[SUCCESS]'
         };
       case 'warning':
         return {
-          icon: <Clock size={15} color="var(--warning-amber)" />,
-          textColor: 'var(--warning-amber)'
+          icon: <Clock size={14} color="#F59E0B" />,
+          textColor: '#FBBF24',
+          prefix: '[WAIT]'
         };
       case 'error':
         return {
-          icon: <XCircle size={15} color="var(--error-rose)" />,
-          textColor: 'var(--error-rose)'
+          icon: <XCircle size={14} color="#EF4444" />,
+          textColor: '#F87171',
+          prefix: '[ERROR]'
         };
       case 'alert':
         return {
-          icon: <AlertCircle size={15} color="var(--error-rose)" />,
-          textColor: 'var(--error-rose)'
+          icon: <AlertCircle size={14} color="#EF4444" />,
+          textColor: '#F87171',
+          prefix: '[SECURITY]'
         };
       default:
         return {
-          icon: <ArrowRight size={15} color="var(--action-blue)" />,
-          textColor: 'var(--text-primary)'
+          icon: <ArrowRight size={14} color="#E7E2D5" />,
+          textColor: '#E7E2D5',
+          prefix: '[INFO]'
         };
     }
   };
 
   return (
-    <div className="card" style={{ padding: '24px 28px', backgroundColor: 'var(--surface-main)' }}>
-      {/* Activity Header & Controls */}
+    <div className="terminal-window">
+      {/* Terminal Title Bar */}
+      <div className="terminal-header">
+        <div className="terminal-dots">
+          <span className="terminal-dot close" />
+          <span className="terminal-dot min" />
+          <span className="terminal-dot max" />
+        </div>
+
+        <div className="terminal-title">
+          $ referpilot --stream-activity (stdout)
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="status-dot active" style={{ width: '6px', height: '6px' }} />
+          <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#A8A29E', letterSpacing: '0.04em' }}>
+            {logs.length} EVENTS
+          </span>
+        </div>
+      </div>
+
+      {/* Terminal Controls Bar */}
       <div style={{
+        padding: '10px 16px',
+        backgroundColor: '#1E1B16',
+        borderBottom: '1px solid #2B2620',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '18px',
         flexWrap: 'wrap',
-        gap: '12px'
+        gap: '10px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-          <Activity size={19} color="var(--action-blue)" />
-          <h3 style={{ fontSize: '17px', fontWeight: '600', color: 'var(--text-primary)' }}>
-            Campaign Activity Feed
-          </h3>
-          <span className="badge badge-neutral" style={{ fontSize: '11.5px' }}>
-            {logs.length} updates
-          </span>
+        {/* Search */}
+        <div style={{ position: 'relative' }}>
+          <input
+            type="text"
+            placeholder="grep events..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            style={{
+              backgroundColor: '#14120F',
+              border: '1px solid #38322B',
+              borderRadius: '6px',
+              padding: '5px 10px 5px 28px',
+              color: '#FFFBF2',
+              fontSize: '12px',
+              fontFamily: 'var(--font-mono)',
+              outline: 'none',
+              width: '180px'
+            }}
+          />
+          <Search size={12} color="#78716C" style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)' }} />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          {/* Search Filter */}
-          <div style={{ position: 'relative' }}>
-            <input
-              type="text"
-              placeholder="Search feed..."
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              style={{
-                backgroundColor: 'var(--surface-input)',
-                border: '1px solid var(--border-divider)',
-                borderRadius: '8px',
-                padding: '6px 10px 6px 30px',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                outline: 'none',
-                width: '160px'
-              }}
-            />
-            <Search size={13} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
-          </div>
-
+        {/* Action buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             onClick={() => setAutoScroll(!autoScroll)}
-            className="btn btn-secondary"
-            style={{ padding: '6px 12px', fontSize: '13px' }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              padding: '5px 10px',
+              backgroundColor: autoScroll ? '#28231D' : 'transparent',
+              color: autoScroll ? '#FFFBF2' : '#78716C',
+              border: '1px solid #38322B',
+              borderRadius: '6px',
+              fontSize: '11.5px',
+              fontFamily: 'var(--font-mono)',
+              cursor: 'pointer'
+            }}
             title={autoScroll ? 'Disable Auto-scroll' : 'Enable Auto-scroll'}
           >
-            <ArrowDown size={13} style={{ opacity: autoScroll ? 1 : 0.4 }} />
-            <span>Auto-scroll</span>
+            <ArrowDown size={12} style={{ opacity: autoScroll ? 1 : 0.4 }} />
+            <span>AUTO-SCROLL</span>
           </button>
 
           <button
             onClick={onClear}
-            className="btn btn-secondary"
-            style={{ padding: '6px 12px', fontSize: '13px' }}
-            title="Clear Activity Feed"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              padding: '5px 10px',
+              backgroundColor: 'transparent',
+              color: '#A8A29E',
+              border: '1px solid #38322B',
+              borderRadius: '6px',
+              fontSize: '11.5px',
+              fontFamily: 'var(--font-mono)',
+              cursor: 'pointer'
+            }}
+            title="Clear Stream"
           >
-            <Trash2 size={13} />
-            <span>Clear</span>
+            <Trash2 size={12} />
+            <span>CLEAR</span>
           </button>
         </div>
       </div>
 
-      {/* Activity Timeline List */}
+      {/* Activity Timeline Terminal List */}
       <div
         ref={containerRef}
         className="activity-feed-container"
-        style={{ minHeight: '300px', maxHeight: '440px' }}
+        style={{ minHeight: '340px', maxHeight: '480px', border: 'none', borderRadius: 0 }}
       >
         {filteredLogs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '52px 20px', color: 'var(--text-muted)' }}>
-            <Activity size={36} strokeWidth={1.5} style={{ margin: '0 auto 10px', opacity: 0.5 }} />
-            <div style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: '500' }}>
-              No campaign activities yet.
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#78716C', fontFamily: 'var(--font-mono)' }}>
+            <Activity size={32} strokeWidth={1.5} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
+            <div style={{ fontSize: '13.5px', color: '#D6D3CD', fontWeight: '500' }}>
+              $ awaiting campaign dispatch...
             </div>
-            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              Launch a campaign from the setup tab to observe live automated actions.
+            <div style={{ fontSize: '12px', color: '#78716C', marginTop: '6px' }}>
+              Launch a campaign from the setup tab to stream automated browser actions live.
             </div>
           </div>
         ) : (
@@ -145,16 +186,18 @@ export default function LiveActivityLog({ logs = [], onClear }) {
               <div
                 key={log.id}
                 className={`activity-feed-item ${isAlert ? 'alert-item' : ''}`}
+                style={{ fontFamily: 'var(--font-mono)' }}
               >
                 <div style={{ marginTop: '2px', flexShrink: 0 }}>
                   {visual.icon}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: visual.textColor, fontSize: '13.5px', wordBreak: 'break-word', lineHeight: '1.45' }}>
+                  <div style={{ color: visual.textColor, fontSize: '12.5px', wordBreak: 'break-word', lineHeight: '1.5' }}>
+                    <span style={{ color: '#78716C', marginRight: '6px', fontSize: '11px' }}>{visual.prefix}</span>
                     {log.message}
                   </div>
                 </div>
-                <span className="activity-feed-time">
+                <span className="activity-feed-time" style={{ color: '#78716C', fontSize: '11px' }}>
                   {log.timestamp}
                 </span>
               </div>

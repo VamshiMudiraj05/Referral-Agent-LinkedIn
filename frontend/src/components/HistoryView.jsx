@@ -126,12 +126,13 @@ export default function HistoryView({ history = [], lastCampaign = null }) {
         gap: '14px'
       }}>
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <History size={20} color="var(--action-blue)" />
-            <span>Outreach History</span>
+          <span className="section-tag">[ AUDIT // {history.length} EVALUATED PROFILES ]</span>
+          <h2 style={{ fontSize: '22px', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <History size={20} color="var(--text-primary)" />
+            <span>Outreach History &amp; Audit Log</span>
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', marginTop: '2px' }}>
-            Audit log of all contacted and evaluated professionals across sessions to prevent duplicate outreach.
+            Persistent log of all contacted and evaluated professionals across sessions to prevent duplicate outreach.
           </p>
         </div>
 
@@ -139,10 +140,10 @@ export default function HistoryView({ history = [], lastCampaign = null }) {
           <button
             onClick={downloadAllCSV}
             className="btn btn-secondary"
-            style={{ padding: '7px 16px', fontSize: '13px' }}
+            style={{ padding: '7px 16px', fontSize: '12.5px', fontFamily: 'var(--font-mono)' }}
           >
-            <Download size={14} />
-            <span>Download CSV</span>
+            <Download size={13} />
+            <span>DOWNLOAD CSV</span>
           </button>
         </div>
       </div>

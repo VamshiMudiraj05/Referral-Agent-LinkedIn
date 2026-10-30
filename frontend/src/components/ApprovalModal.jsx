@@ -54,14 +54,14 @@ export default function ApprovalModal({ data, onDecision }) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
             <span className="status-dot waiting" />
-            <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>
-              Human Approval Required
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+              HUMAN APPROVAL GATE
             </h3>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="badge badge-neutral" style={{ fontSize: '11.5px' }}>Priority #{priorityRank || 1}</span>
-            <span className="badge badge-tech" style={{ fontWeight: '600', fontSize: '11.5px' }}>
-              {score || 80}% Relevant
+            <span className="badge badge-neutral" style={{ fontSize: '11px' }}>RANK #{priorityRank || 1}</span>
+            <span className="badge badge-tech" style={{ fontWeight: '700', fontSize: '11px' }}>
+              {score || 80}% MATCH
             </span>
           </div>
         </div>
@@ -265,30 +265,30 @@ export default function ApprovalModal({ data, onDecision }) {
           <button
             onClick={() => onDecision({ action: 'stop' })}
             className="btn btn-danger"
-            style={{ padding: '8px 14px', fontSize: '13px' }}
+            style={{ padding: '8px 14px', fontSize: '12.5px', fontFamily: 'var(--font-mono)' }}
           >
             <Square size={13} fill="currentColor" />
-            <span>Stop Campaign</span>
+            <span>STOP CAMPAIGN</span>
           </button>
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={() => onDecision({ action: 'skip' })}
               className="btn btn-secondary"
-              style={{ padding: '8px 15px', fontSize: '13px' }}
+              style={{ padding: '8px 15px', fontSize: '12.5px', fontFamily: 'var(--font-mono)' }}
             >
-              <SkipForward size={14} />
-              <span>Skip Candidate</span>
+              <SkipForward size={13} />
+              <span>SKIP</span>
             </button>
 
             <button
               onClick={() => canSend && onDecision({ action: 'approve', editedMessage: currentMessage })}
               disabled={!canSend || isOverLimit}
               className="btn btn-primary"
-              style={{ padding: '8px 18px', fontSize: '13.5px', opacity: !canSend ? 0.55 : 1 }}
+              style={{ padding: '8px 18px', fontSize: '13px', fontWeight: '700', fontFamily: 'var(--font-mono)', opacity: !canSend ? 0.55 : 1 }}
             >
-              <Send size={14} />
-              <span>{canSend ? 'Approve & Send' : 'Sending Disabled'}</span>
+              <Send size={13} />
+              <span>{canSend ? 'APPROVE & SEND →' : 'SENDING DISABLED'}</span>
             </button>
           </div>
         </div>

@@ -33,12 +33,13 @@ export default function FinalReport({ report, companyName, onNewCampaign }) {
         gap: '16px'
       }}>
         <div>
+          <span className="section-tag">[ SUMMARY // CAMPAIGN EXECUTION FINISHED ]</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-            <span className="badge badge-success">Campaign Completed</span>
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{currentDate}</span>
+            <span className="badge badge-success">CAMPAIGN COMPLETED</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{currentDate}</span>
           </div>
-          <h1 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)' }}>
-            Campaign Summary: {companyName || 'All Companies'}
+          <h1 style={{ fontSize: '26px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            Campaign Summary: {companyName || 'All Target Companies'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
             Final performance overview and evaluation summary of the referral outreach campaign.
@@ -49,19 +50,19 @@ export default function FinalReport({ report, companyName, onNewCampaign }) {
           <button
             onClick={downloadCSV}
             className="btn btn-primary"
-            style={{ padding: '8px 18px', fontSize: '13.5px', fontWeight: '500' }}
+            style={{ padding: '9px 18px', fontSize: '13px', fontWeight: '700', fontFamily: 'var(--font-mono)' }}
           >
             <Download size={14} />
-            <span>Export as CSV</span>
+            <span>EXPORT CSV</span>
           </button>
 
           <button
             onClick={onNewCampaign}
             className="btn btn-secondary"
-            style={{ padding: '8px 18px', fontSize: '13.5px' }}
+            style={{ padding: '9px 18px', fontSize: '13px', fontFamily: 'var(--font-mono)' }}
           >
             <RefreshCw size={14} />
-            <span>Start New Campaign</span>
+            <span>NEW CAMPAIGN</span>
           </button>
         </div>
       </div>
