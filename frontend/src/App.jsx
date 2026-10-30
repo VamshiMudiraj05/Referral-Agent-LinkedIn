@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Building2, 
   Users, 
@@ -13,7 +13,9 @@ import {
   Compass,
   CheckCircle,
   XCircle,
-  Briefcase
+  Briefcase,
+  Moon,
+  Sun
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -26,11 +28,59 @@ import FinalReport from './components/FinalReport';
 import HistoryView from './components/HistoryView';
 import SafetyBanner from './components/SafetyBanner';
 
+// Custom hook for scroll-reveal animations
+function useScrollReveal() {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -30px 0px' }
+    );
+
+    const elements = node.querySelectorAll('.scroll-reveal');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
+  return ref;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('setup'); // 'setup' | 'live' | 'candidates' | 'history' | 'report'
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [pauseReason, setPauseReason] = useState('');
+
+  // Theme state with localStorage persistence
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem('referpilot-theme') || 'light'; }
+    catch { return 'light'; }
+  });
+
+  // Apply theme to document
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('referpilot-theme', theme); } catch {}
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  }, []);
+
+  // Scroll reveal ref for main content
+  const mainRef = useScrollReveal();
   
   const [currentCompany, setCurrentCompany] = useState('');
   const [currentMessage, setCurrentMessage] = useState('');
@@ -277,7 +327,7 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-app)' }}>
       {/* Top Zentra-Inspired Navigation Bar */}
-      <header style={{
+      <header className="header-animate" style={{
         backgroundColor: 'var(--surface-main)',
         borderBottom: '1px solid var(--border-divider)',
         position: 'sticky',
@@ -335,8 +385,18 @@ export default function App() {
           {/* Terminal Status Pill */}
           <div className="terminal-pill" style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
             <span className={`status-dot ${isRunning ? 'active' : isPaused ? 'waiting' : 'idle'}`} style={{ width: '6px', height: '6px' }} />
-            <span>$ referpilot {isRunning ? '--active' : isPaused ? '--paused' : '--idle'}</span>
+            <span className={isRunning ? 'terminal-pill-active' : ''}>$ referpilot {isRunning ? '--active' : isPaused ? '--paused' : '--idle'}</span>
           </div>
+
+          {/* Theme Toggle */}
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          >
+            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          </button>
 
           {/* Navigation Segmented Controls */}
           <nav style={{
@@ -418,7 +478,7 @@ export default function App() {
       </header>
 
       {/* Main Centered Content */}
-      <main className="container" style={{ flex: 1 }}>
+      <main className="container" style={{ flex: 1 }} ref={mainRef}>
         {/* Safety Alert Banner */}
         <SafetyBanner
           isPaused={isPaused}
@@ -427,7 +487,7 @@ export default function App() {
         />
 
         {/* Campaign Overview Section (Zentra Style) */}
-        <section className="card" style={{ padding: '18px 22px', marginBottom: '22px' }}>
+        <section className="card section-animate" style={{ padding: '18px 22px', marginBottom: '22px' }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -491,7 +551,7 @@ export default function App() {
           {/* 6 Aligned Metric Cards */}
           <div className="kpi-grid">
             {/* 1. Requests Sent */}
-            <div className="kpi-card">
+            <div className="kpi-card kpi-card-animate">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Requests sent</span>
                 <div style={{
@@ -507,13 +567,13 @@ export default function App() {
                   <CheckCircle size={14} />
                 </div>
               </div>
-              <div style={{ fontSize: '30px', fontWeight: '600', color: 'var(--success-green)', marginTop: '8px', lineHeight: 1 }}>
+              <div className="kpi-number" style={{ fontSize: '30px', fontWeight: '600', color: 'var(--success-green)', marginTop: '8px', lineHeight: 1 }}>
                 {stats.sent}
               </div>
             </div>
 
             {/* 2. HR / Talent */}
-            <div className="kpi-card">
+            <div className="kpi-card kpi-card-animate">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>HR / Talent</span>
                 <div style={{
@@ -529,13 +589,13 @@ export default function App() {
                   <Users size={14} />
                 </div>
               </div>
-              <div style={{ fontSize: '30px', fontWeight: '600', color: 'var(--accent-lavender)', marginTop: '8px', lineHeight: 1 }}>
+              <div className="kpi-number" style={{ fontSize: '30px', fontWeight: '600', color: 'var(--accent-lavender)', marginTop: '8px', lineHeight: 1 }}>
                 {stats.salesSent}
               </div>
             </div>
 
             {/* 3. IT / Engineering */}
-            <div className="kpi-card">
+            <div className="kpi-card kpi-card-animate">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>IT / Engineering</span>
                 <div style={{
@@ -551,13 +611,13 @@ export default function App() {
                   <Briefcase size={14} />
                 </div>
               </div>
-              <div style={{ fontSize: '30px', fontWeight: '600', color: 'var(--action-blue)', marginTop: '8px', lineHeight: 1 }}>
+              <div className="kpi-number" style={{ fontSize: '30px', fontWeight: '600', color: 'var(--action-blue)', marginTop: '8px', lineHeight: 1 }}>
                 {stats.itSent}
               </div>
             </div>
 
             {/* 4. Skipped */}
-            <div className="kpi-card">
+            <div className="kpi-card kpi-card-animate">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Skipped</span>
                 <div style={{
@@ -573,13 +633,13 @@ export default function App() {
                   <XCircle size={14} />
                 </div>
               </div>
-              <div style={{ fontSize: '30px', fontWeight: '600', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: 1 }}>
+              <div className="kpi-number" style={{ fontSize: '30px', fontWeight: '600', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: 1 }}>
                 {stats.skipped}
               </div>
             </div>
 
             {/* 5. Connected / Pending */}
-            <div className="kpi-card">
+            <div className="kpi-card kpi-card-animate">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Connected / Pending</span>
                 <div style={{
@@ -595,13 +655,13 @@ export default function App() {
                   <Clock size={14} />
                 </div>
               </div>
-              <div style={{ fontSize: '30px', fontWeight: '600', color: 'var(--warning-amber)', marginTop: '8px', lineHeight: 1 }}>
+              <div className="kpi-number" style={{ fontSize: '30px', fontWeight: '600', color: 'var(--warning-amber)', marginTop: '8px', lineHeight: 1 }}>
                 {(stats.alreadyConnected || 0) + (stats.pending || 0)}
               </div>
             </div>
 
             {/* 6. Failed */}
-            <div className="kpi-card">
+            <div className="kpi-card kpi-card-animate">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Failed</span>
                 <div style={{
@@ -617,7 +677,7 @@ export default function App() {
                   <AlertTriangle size={14} />
                 </div>
               </div>
-              <div style={{ fontSize: '30px', fontWeight: '600', color: stats.failed > 0 ? 'var(--error-rose)' : 'var(--text-muted)', marginTop: '8px', lineHeight: 1 }}>
+              <div className="kpi-number" style={{ fontSize: '30px', fontWeight: '600', color: stats.failed > 0 ? 'var(--error-rose)' : 'var(--text-muted)', marginTop: '8px', lineHeight: 1 }}>
                 {stats.failed}
               </div>
             </div>
@@ -626,15 +686,17 @@ export default function App() {
 
         {/* Tab Panels */}
         {activeTab === 'setup' && (
+          <div key="tab-setup" className="tab-content-enter">
           <CampaignSetup
             onStartCampaign={handleStartCampaign}
             isRunning={isRunning}
             recentCompanies={history.map(record => record.company).filter(Boolean)}
           />
+          </div>
         )}
 
         {activeTab === 'live' && (
-          <div>
+          <div key="tab-live" className="tab-content-enter">
             {/* Target Company Verification Card if awaiting confirmation */}
             {companyVerification && (
               <CompanyVerification
@@ -645,7 +707,7 @@ export default function App() {
 
             {/* Current Active Campaign Notice */}
             {currentCompany && (
-              <div className="card" style={{ padding: '16px 20px', marginBottom: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+              <div className="card hover-lift" style={{ padding: '16px 20px', marginBottom: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{
                     width: '36px',
@@ -692,25 +754,31 @@ export default function App() {
         )}
 
         {activeTab === 'candidates' && (
+          <div key="tab-candidates" className="tab-content-enter">
           <CandidateTable
             candidates={candidates}
             currentCompany={currentCompany}
           />
+          </div>
         )}
 
         {activeTab === 'history' && (
+          <div key="tab-history" className="tab-content-enter">
           <HistoryView
             history={history}
             lastCampaign={lastCampaign}
           />
+          </div>
         )}
 
         {activeTab === 'report' && (
+          <div key="tab-report" className="tab-content-enter">
           <FinalReport
             report={finalReport || { stats, records: history }}
             companyName={currentCompany}
             onNewCampaign={() => setActiveTab('setup')}
           />
+          </div>
         )}
 
         {/* Human Approval Floating Modal */}

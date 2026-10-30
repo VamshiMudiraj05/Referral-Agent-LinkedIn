@@ -20,7 +20,7 @@ export default function ApprovalModal({ data, onDecision }) {
   const isOverLimit = charCount > 300;
 
   return (
-    <div style={{
+    <div className="modal-overlay-animate" style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -34,7 +34,7 @@ export default function ApprovalModal({ data, onDecision }) {
       zIndex: 1000,
       padding: '20px'
     }}>
-      <div style={{
+      <div className="scale-in" style={{
         maxWidth: '580px',
         width: '100%',
         backgroundColor: 'var(--surface-main)',
