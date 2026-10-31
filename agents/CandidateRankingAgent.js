@@ -28,7 +28,9 @@ class CandidateRankingAgent {
       'cloud architect', 'software architect', 'technology manager', 'it manager',
       'infrastructure', 'cybersecurity', 'security engineer', 'systems engineer',
       'site reliability', 'sre', 'platform engineer', 'systems architect',
-      'engineering director', 'vp of engineering', 'head of engineering', 'cto'
+      'engineering director', 'vp of engineering', 'head of engineering', 'cto',
+      'mts', 'smts', 'member of technical staff', 'technical staff', 'support engineer',
+      'solutions engineer', 'solutions architect', 'firmware', 'embedded'
     ];
 
     // Excluded keywords (Sales, Marketing, Finance, Legal, etc.)
@@ -79,12 +81,19 @@ class CandidateRankingAgent {
       return { excluded: true, isInternOrTrainee: true, reason: 'Intern / Trainee / Student role restricted' };
     }
 
+    // Strip company references like "salesforce" so company name doesn't trigger excluded keyword "sales"
+    const cleanLower = lower.replace(/\bsalesforce\b/gi, '').trim();
+
     // 2. Check if it's an excluded department (Sales, Finance, Marketing, Legal, etc.)
     for (const kw of this.excludedKeywords) {
-      if (lower.includes(kw)) {
-        // Exception: if it's "Technical Recruiter" or "Sales Recruiter", it's still a recruiter!
-        const isRecruiter = this.hrKeywords.some(k => lower.includes(k));
-        if (isRecruiter) {
+      const kwRegex = new RegExp('\\b' + kw + '\\b', 'i');
+      if (kwRegex.test(cleanLower)) {
+        // Exception: if it's a software engineer or developer or architect or technical lead or recruiter, it's NOT an excluded department!
+        const isTech = this.techKeywords.some(k => cleanLower.includes(k)) ||
+                       /\b(engineer|developer|architect|tech lead|sdet|mts|smts)\b/i.test(cleanLower);
+        const isRecruiter = this.hrKeywords.some(k => cleanLower.includes(k)) ||
+                            /\b(recruiter|sourcer|talent)\b/i.test(cleanLower);
+        if (isTech || isRecruiter) {
           return { excluded: false };
         }
         return { excluded: true, reason: `Excluded department: ${kw}` };
@@ -94,8 +103,7 @@ class CandidateRankingAgent {
     // 3. Must be an HR/Talent or IT/Engineering role
     const isHrOrTech = this.hrKeywords.some(k => lower.includes(k)) || 
                        this.techKeywords.some(k => lower.includes(k)) ||
-                       lower.includes('engineer') || lower.includes('developer') || lower.includes('recruiter') ||
-                       lower.includes('qa') || lower.includes('test') || lower.includes('architect');
+                       /\b(engineer|developer|recruiter|qa|test|architect|mts|smts|tech|engineering)\b/i.test(lower);
 
     if (!isHrOrTech) {
       return { excluded: true, reason: 'Not an HR/Talent or IT/Engineering role' };

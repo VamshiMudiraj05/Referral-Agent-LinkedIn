@@ -135,15 +135,25 @@ class PeopleDiscoveryAgent {
 
             // Extract headline / job title
             let headline = '';
-            const headlineEl = card.querySelector('.org-people-profile-card__profile-position, div.artdeco-entity-lockup__caption');
+            const headlineEl = card.querySelector('.artdeco-entity-lockup__subtitle, .org-people-profile-card__profile-position, div.t-14.t-black--light');
             if (headlineEl) {
-              headline = headlineEl.innerText.trim();
+              const text = headlineEl.innerText.trim();
+              if (text && !text.toLowerCase().includes("degree connection") && !text.match(/^(·|\s)*(1st|2nd|3rd\+?)$/i)) {
+                headline = text;
+              }
             }
-            if (!headline || headline.match(/^(·|\s)*(1st|2nd|3rd\+?)$/i)) {
-              const lines = cardText.split('\n')
+            if (!headline || headline.toLowerCase().includes("degree connection") || headline.match(/^(·|\s)*(1st|2nd|3rd\+?)$/i)) {
+              const cardLines = cardText.split('\n')
                 .map(l => l.trim())
-                .filter(l => l.length > 0 && l !== name && !l.match(/^(·|\s)*(1st|2nd|3rd\+?)$/i) && !l.toLowerCase().includes('mutual') && !l.toLowerCase().includes('shared connection') && l.toLowerCase() !== 'connect' && l.toLowerCase() !== 'message' && l.toLowerCase() !== 'pending');
-              headline = lines[0] || '';
+                .filter(l => l.length > 0 && l !== name
+                  && !l.toLowerCase().includes("degree connection")
+                  && !l.match(/^(·|\s)*(1st|2nd|3rd\+?)$/i)
+                  && !l.toLowerCase().includes("mutual")
+                  && !l.toLowerCase().includes("shared connection")
+                  && l.toLowerCase() !== "connect"
+                  && l.toLowerCase() !== "message"
+                  && l.toLowerCase() !== "pending");
+              headline = cardLines[0] || '';
             }
 
             // Only treat an explicit connection degree or pending label as a status.
