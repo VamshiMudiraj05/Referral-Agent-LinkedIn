@@ -190,7 +190,7 @@ class WorkflowCoordinator {
     const rawCandidates = await this.peopleAgent.discoverPeople(
       officialCompany.officialUrl,
       discoveryKeywords,
-      80,
+      Math.max(80, this.safety.maxRequestsPerCompany * 5),
       this.currentCampaign.locationFilter
     );
     const candidatesWithCompanyEvidence = rawCandidates.map(candidate => ({

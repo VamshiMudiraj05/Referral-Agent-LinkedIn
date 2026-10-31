@@ -42,12 +42,12 @@ class PeopleDiscoveryAgent {
 
     const allDiscovered = new Map();
 
-    // Strategy A: Collect visible employees from default People view by progressive scrolling
-    this.logger('Collecting employee profiles (prioritizing Mutuals & Alumni, HR/Talent & IT)...');
+    // Strategy A: Collect visible employees from default People view by progressive scrolling and clicking Show More
+    this.logger(`Collecting employee profiles until reaching target pool (goal: ${maxCandidates})...`);
     await this.scrollAndCollect(page, allDiscovered, maxCandidates);
 
-    // Strategy B: If we need more specific candidates (e.g. Recruiters or Engineers), use the People search input
-    if (allDiscovered.size < 15) {
+    // Strategy B: If we still need more candidates to meet quota, use the People search input
+    if (allDiscovered.size < maxCandidates) {
       const activeKeywords = locationFilter && locationFilter.trim()
         ? [locationFilter.trim(), ...targetKeywords]
         : targetKeywords;
@@ -81,7 +81,7 @@ class PeopleDiscoveryAgent {
     let previousCount = 0;
     let noChangeCycles = 0;
 
-    for (let scroll = 0; scroll < 6; scroll++) {
+    for (let scroll = 0; scroll < 20; scroll++) {
       if (map.size >= maxLimit) break;
 
       const extracted = await page.evaluate(() => {
@@ -215,9 +215,34 @@ class PeopleDiscoveryAgent {
         }
       }
 
+      if (map.size >= maxLimit) break;
+
+      // Check and click "Show more results" button if present on page
+      const clickedShowMore = await page.evaluate(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        const showMoreBtn = btns.find(b => {
+          const t = b.innerText.toLowerCase().trim();
+          return t.includes('show more results') || t.includes('see more results') || t.includes('show more');
+        });
+        if (showMoreBtn && showMoreBtn.offsetParent !== null) {
+          showMoreBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          showMoreBtn.click();
+          return true;
+        }
+        return false;
+      });
+
+      if (clickedShowMore) {
+        this.logger(`Loading next batch of employees (discovered: ${map.size}/${maxLimit})...`);
+        await page.waitForTimeout(2000);
+        noChangeCycles = 0;
+        previousCount = map.size;
+        continue;
+      }
+
       if (map.size === previousCount) {
         noChangeCycles++;
-        if (noChangeCycles >= 2) break;
+        if (noChangeCycles >= 3) break;
       } else {
         noChangeCycles = 0;
       }
@@ -225,9 +250,9 @@ class PeopleDiscoveryAgent {
 
       // Scroll down smoothly to trigger dynamic load
       await page.evaluate(() => {
-        window.scrollBy({ top: 800, behavior: 'smooth' });
+        window.scrollBy({ top: 1200, behavior: 'smooth' });
       });
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(1200);
     }
   }
 }
